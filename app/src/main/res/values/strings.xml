@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Willing.to.do</string>
+
+    <string name="title_inbox">Inbox</string>
+    <string name="title_priority">Priority</string>
+    <string name="title_willingness">Willingness</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Example action</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="action_settings2">Settings</string>
+
+    <string-array name="inbox_dummy">
+        <item>Go to X</item>
+        <item>Go to Y</item>
+    </string-array>
+
+    <string-array name="priority_dummy">
+        <item>Go to Z</item>
+        <item>Go to W</item>
+    </string-array>
+
+    <string-array name="willingness_dummy">
+        <item>Go to W</item>
+        <item>Go to Z</item>
+    </string-array>
+</resources>
