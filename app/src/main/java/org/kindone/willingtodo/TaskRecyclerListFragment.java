@@ -16,7 +16,9 @@
 
 package org.kindone.willingtodo;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,6 +27,8 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.melnykov.fab.FloatingActionButton;
 
 import org.kindone.willingtodo.helper.OnStartDragListener;
 import org.kindone.willingtodo.helper.SimpleItemTouchHelperCallback;
@@ -38,6 +42,12 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
 
     private String mMode;
     private ItemTouchHelper mItemTouchHelper;
+    private FloatingActionButton mNewButton;
+    private TaskManipulationListener mCallback;
+    private TaskRecyclerListAdapter mAdapter;
+
+    public TaskRecyclerListFragment() {
+    }
 
     public static TaskRecyclerListFragment newInstance(int mode) {
         TaskRecyclerListFragment fragment = new TaskRecyclerListFragment();
@@ -48,12 +58,25 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
         return fragment;
     }
 
-    public TaskRecyclerListFragment() {
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception
+        try {
+            mCallback = (TaskManipulationListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
     }
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mNewButton = (FloatingActionButton) container.findViewById(R.id.fab);
         return new RecyclerView(container.getContext());
     }
 
@@ -64,20 +87,48 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
         Bundle args = getArguments();
         int mode = args.getInt(ARG_MODE);
 
-        TaskRecyclerListAdapter adapter = new TaskRecyclerListAdapter(getActivity(), this, mode);
+        mAdapter = new TaskRecyclerListAdapter(getActivity(), this, mode);
+
+        LinearLayoutManager llm = new LinearLayoutManager(getActivity());
 
         RecyclerView recyclerView = (RecyclerView) view;
         recyclerView.setHasFixedSize(true);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.setLayoutManager(llm);
 
-        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(adapter);
+        // floating action button
+        mNewButton.attachToRecyclerView(recyclerView);
+        mNewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), TaskCreateActivity.class);
+                getActivity().startActivityForResult(intent, MainActivity.INTENT_CREATE_TASK);
+            }
+        });
+
+        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mAdapter);
+
         mItemTouchHelper = new ItemTouchHelper(callback);
         mItemTouchHelper.attachToRecyclerView(recyclerView);
+
+    }
+
+    public void onCreateTask(TaskListItem item) {
+        mAdapter.onItemCreate(0, item);
     }
 
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         mItemTouchHelper.startDrag(viewHolder);
+    }
+
+    interface TaskManipulationListener {
+        void onTaskCreated(Task task);
+
+        void onTaskPrioritySwapped(long id1, long id2);
+
+        void onTaskWillingnessSwapped(long id1, long id2);
+
+        void onTaskRemoved(long id);
     }
 }

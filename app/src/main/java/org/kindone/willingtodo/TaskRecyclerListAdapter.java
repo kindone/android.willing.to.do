@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,10 +31,11 @@ import android.widget.TextView;
 import org.kindone.willingtodo.helper.ItemTouchHelperAdapter;
 import org.kindone.willingtodo.helper.ItemTouchHelperViewHolder;
 import org.kindone.willingtodo.helper.OnStartDragListener;
+import org.kindone.willingtodo.helper.TaskDbHelperProvider;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -45,29 +47,37 @@ import java.util.List;
 public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskRecyclerListAdapter.ItemViewHolder>
         implements ItemTouchHelperAdapter {
 
-    private static final String TAG = "TaskRecyclerListAdapter";
-
     private final List<TaskListItem> mItems = new ArrayList<>();
-
     private final OnStartDragListener mDragStartListener;
+    private final TaskRecyclerListFragment.TaskManipulationListener mTaskManipulationListener;
+    private final int mMode;
 
     public TaskRecyclerListAdapter(Context context, OnStartDragListener dragStartListener, int mode) {
         mDragStartListener = dragStartListener;
-        int dummy_array_id = 0;
+        mMode = mode;
 
-        if (mode == R.string.title_inbox)
-            dummy_array_id = R.array.inbox_dummy;
-        else if (mode == R.string.title_priority)
-            dummy_array_id = R.array.priority_dummy;
-        else if (mode == R.string.title_willingness)
-            dummy_array_id = R.array.willingness_dummy;
+        TaskLoader taskLoader = (TaskLoader) context;
+        List<Task> tasks = new LinkedList<>();
 
-        List<String> titles = Arrays.asList(context.getResources().getStringArray(dummy_array_id));
+        if (mMode == R.string.title_priority)
+            tasks = taskLoader.loadTasksOrderedByPriority();
+        else if (mMode == R.string.title_willingness)
+            tasks = taskLoader.loadTasksOrderedByWillingness();
+        else
+            tasks = taskLoader.loadTasksOrderedByPriority();
 
-        for (int i = 0; i < titles.size(); i++) {
-            mItems.add(new TaskListItem(titles.get(i)));
+        mTaskManipulationListener = (TaskRecyclerListFragment.TaskManipulationListener) context;
+
+        TaskDbHelperProvider taskDbHelperProvider = (TaskDbHelperProvider) context;
+        TaskDbHelper taskDbHelper = taskDbHelperProvider.getTaskDbHelper();
+
+        taskDbHelper.getPriorityOrderedTasks();
+
+        for (int i = 0; i < tasks.size(); i++) {
+            mItems.add(new TaskListItem(tasks.get(i)));
         }
 
+        Log.w("TSKRECYADAPTER", "loaded tasks from db");
     }
 
     @Override
@@ -94,22 +104,44 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskRecyclerLi
         });
     }
 
+    public void onItemCreate(int position, TaskListItem item) {
+        mItems.add(position, item);
+        notifyItemInserted(position);
+        mTaskManipulationListener.onTaskCreated(item.getTask());
+    }
+
     @Override
     public void onItemDismiss(int position) {
+        TaskListItem taskItem = mItems.get(position);
         mItems.remove(position);
         notifyItemRemoved(position);
+        mTaskManipulationListener.onTaskRemoved(taskItem.getId());
     }
 
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
+        TaskListItem taskItem1 = mItems.get(fromPosition);
+        TaskListItem taskItem2 = mItems.get(toPosition);
+
         Collections.swap(mItems, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
+        if (mMode == R.string.title_priority)
+            mTaskManipulationListener.onTaskPrioritySwapped(taskItem1.getId(), taskItem2.getId());
+        else if (mMode == R.string.title_willingness)
+            mTaskManipulationListener.onTaskWillingnessSwapped(taskItem1.getId(), taskItem2.getId());
+
         return true;
     }
 
     @Override
     public int getItemCount() {
         return mItems.size();
+    }
+
+    interface TaskLoader {
+        List<Task> loadTasksOrderedByPriority();
+
+        List<Task> loadTasksOrderedByWillingness();
     }
 
     /**

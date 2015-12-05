@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="color_priority_high">#f44336</color>
+    <color name="fab_primary">#000000</color>
+    <color name="fab_primary_pressed">#c0c0c0</color>
+    <color name="fab_ripple">#707070</color>
 </resources>
