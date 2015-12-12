@@ -20,7 +20,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -51,24 +50,31 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskRecyclerLi
     private final OnStartDragListener mDragStartListener;
     private final TaskRecyclerListFragment.TaskManipulationListener mTaskManipulationListener;
     private final int mMode;
+    private TaskLoader mTaskLoader;
+    private int mVersion;
 
     public TaskRecyclerListAdapter(Context context, OnStartDragListener dragStartListener, int mode) {
         mDragStartListener = dragStartListener;
         mMode = mode;
+        mTaskLoader = (TaskLoader) context;
+        mTaskManipulationListener = (TaskRecyclerListFragment.TaskManipulationListener) mTaskLoader;
 
-        TaskLoader taskLoader = (TaskLoader) context;
+        init();
+
+    }
+
+    public void init() {
+        mItems.clear();
         List<Task> tasks = new LinkedList<>();
 
         if (mMode == R.string.title_priority)
-            tasks = taskLoader.loadTasksOrderedByPriority();
+            tasks = mTaskLoader.loadTasksOrderedByPriority();
         else if (mMode == R.string.title_willingness)
-            tasks = taskLoader.loadTasksOrderedByWillingness();
-        else
-            tasks = taskLoader.loadTasksOrderedByPriority();
+            tasks = mTaskLoader.loadTasksOrderedByWillingness();
+        else // TODO: awaiting list
+            tasks = mTaskLoader.loadTasksOrderedByPriority();
 
-        mTaskManipulationListener = (TaskRecyclerListFragment.TaskManipulationListener) context;
-
-        TaskDbHelperProvider taskDbHelperProvider = (TaskDbHelperProvider) context;
+        TaskDbHelperProvider taskDbHelperProvider = (TaskDbHelperProvider) mTaskLoader;
         TaskDbHelper taskDbHelper = taskDbHelperProvider.getTaskDbHelper();
 
         taskDbHelper.getPriorityOrderedTasks();
@@ -77,7 +83,15 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskRecyclerLi
             mItems.add(new TaskListItem(tasks.get(i)));
         }
 
-        Log.w("TSKRECYADAPTER", "loaded tasks from db");
+        mVersion = mTaskLoader.getVersion();
+
+    }
+
+    public void refresh(int version) {
+        if (version != mVersion) {
+            init();
+            notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -139,6 +153,8 @@ public class TaskRecyclerListAdapter extends RecyclerView.Adapter<TaskRecyclerLi
     }
 
     interface TaskLoader {
+        int getVersion();
+
         List<Task> loadTasksOrderedByPriority();
 
         List<Task> loadTasksOrderedByWillingness();

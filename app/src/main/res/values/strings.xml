@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Willing.to.do</string>
 
-    <string name="title_inbox">Inbox</string>
     <string name="title_priority">Priority</string>
     <string name="title_willingness">Willingness</string>
+    <string name="title_awaiting">Awaiting</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

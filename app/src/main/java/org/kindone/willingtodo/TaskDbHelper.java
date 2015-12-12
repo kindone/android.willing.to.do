@@ -18,9 +18,11 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "TaskDbHelper";
     public final String tableName = "TASKS";
+    private int mVersion; //state propagation TODO: confusing name
 
     public TaskDbHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
+        mVersion = 0;
     }
 
     @Override
@@ -38,6 +40,10 @@ public class TaskDbHelper extends SQLiteOpenHelper {
 
 //        stmt.bindAllArgsAsStrings(new String[]{"existing task2", "", ""});
 //        stmt.executeInsert();
+    }
+
+    public int getVersion() {
+        return mVersion;
     }
 
     @Override
@@ -87,6 +93,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             Log.e(TAG, "insertTask error: " + e.getMessage());
         } finally {
             db.close();
+            mVersion++;
         }
 
         checkNumTasks();
@@ -134,6 +141,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
             db.close();
+            mVersion++;
         }
 
         checkTasks();
@@ -169,6 +177,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             db.delete(tableName, "_id = ?", selectionArgs);
         } finally {
             db.close();
+            mVersion++;
         }
 
         Log.v(TAG, "deleteTask");

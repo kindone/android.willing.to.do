@@ -17,10 +17,10 @@
 package org.kindone.willingtodo;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -45,6 +45,7 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
     private FloatingActionButton mNewButton;
     private TaskManipulationListener mCallback;
     private TaskRecyclerListAdapter mAdapter;
+    private int mListVersion;
 
     public TaskRecyclerListFragment() {
     }
@@ -56,6 +57,10 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
 
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public void refresh(int version) {
+        mAdapter.refresh(version);
     }
 
     @Override
@@ -76,7 +81,7 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mNewButton = (FloatingActionButton) container.findViewById(R.id.fab);
+        mNewButton = (FloatingActionButton) container.getRootView().findViewById(R.id.fab);
         return new RecyclerView(container.getContext());
     }
 
