@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="org.kindone.willingtodo.TaskCreateActivity"
+    tools:context="org.kindone.willingtodo.TaskEditActivity"
     tools:showIn="@layout/activity_task_create">
 
     <EditText
@@ -30,5 +30,13 @@
         android:hint="Label"
         android:text="" />
 
+    <!--<EditText-->
+    <!--android:layout_width="fill_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:id="@+id/deadlineEditText"-->
+    <!--android:layout_below="@+id/titleEditText"-->
+    <!--android:layout_centerHorizontal="true"-->
+    <!--android:text=""-->
+    <!--android:hint="Deadline"/>-->
 
 </RelativeLayout>

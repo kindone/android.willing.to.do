@@ -7,6 +7,7 @@
     For more on layout aliases, see:
     http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters
     -->
-    <item name="fragment_item" type="layout">@layout/fragment_tasklist_grid</item>
+    <!-- TODO: replace with a proper grid layout -->
+
 
 </resources>

@@ -27,7 +27,13 @@
         <item>Go to W</item>
         <item>Go to Z</item>
     </string-array>
+
     <string name="title_activity_task_create">New Task</string>
+    <string name="title_activity_task_edit">Edit Task</string>
+    <string name="title_activity_pomodoro_control">Pomodoro Timer</string>
+
+    <string name="context_quick_pomodoro_long">Start Long Pomodoro</string>
+    <string name="context_quick_pomodoro_short">Start Short Pomodoro</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
