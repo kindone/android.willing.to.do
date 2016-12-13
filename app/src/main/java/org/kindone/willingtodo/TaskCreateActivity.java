@@ -16,7 +16,6 @@ public class TaskCreateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_task_create);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
@@ -31,21 +30,29 @@ public class TaskCreateActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_done) {
-            Intent intent = this.getIntent();
-            EditText titleText = (EditText) findViewById(R.id.titleEditText);
-
-            intent.putExtra(MainActivity.RESULT_CREATE_TASK_TITLE, titleText.getText().toString());
-
-            if (getParent() == null) {
-                setResult(RESULT_OK, intent);
-            } else {
-                getParent().setResult(RESULT_OK, intent);
-            }
-            finish();
+            setResult();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setResult()
+    {
+        Intent intent = this.getIntent();
+        intent.putExtra(MainActivity.RESULT_CREATE_TASK_TITLE, getTaskTitle());
+
+        if (getParent() == null) {
+            setResult(RESULT_OK, intent);
+        } else {
+            getParent().setResult(RESULT_OK, intent);
+        }
+        finish();
+    }
+
+    private String getTaskTitle() {
+        EditText titleText = (EditText) findViewById(R.id.titleEditText);
+        return titleText.getText().toString();
     }
 
 }

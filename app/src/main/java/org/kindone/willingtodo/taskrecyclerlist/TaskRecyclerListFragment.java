@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.kindone.willingtodo;
+package org.kindone.willingtodo.taskrecyclerlist;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -30,49 +30,50 @@ import android.view.ViewGroup;
 
 import com.melnykov.fab.FloatingActionButton;
 
-import org.kindone.willingtodo.helper.OnStartDragListener;
+import org.kindone.willingtodo.MainActivity;
+import org.kindone.willingtodo.R;
+import org.kindone.willingtodo.TaskCreateActivity;
+import org.kindone.willingtodo.data.TaskListItem;
 import org.kindone.willingtodo.helper.SimpleItemTouchHelperCallback;
 
 /**
  * @author Paul Burke (ipaulpro)
  */
-public class TaskRecyclerListFragment extends Fragment implements OnStartDragListener {
+public class TaskRecyclerListFragment extends Fragment implements RecyclerListItemStartDragListener {
 
     private static final String ARG_MODE = "mode";
 
-    private String mMode;
     private ItemTouchHelper mItemTouchHelper;
-    private FloatingActionButton mNewButton;
-    private TaskManipulationListener mCallback;
-    private TaskRecyclerListAdapter mAdapter;
-    private int mListVersion;
+    private FloatingActionButton mNewFloatingButton;
+    private TaskChangeListener mTaskChangeListener;
+    private TaskProvider mTaskProvider;
+    private TaskRecyclerListAdapterBase mListAdapter;
 
-    public TaskRecyclerListFragment() {
-    }
-
-    public static TaskRecyclerListFragment newInstance(int mode) {
+    public static TaskRecyclerListFragment create(int mode) {
         TaskRecyclerListFragment fragment = new TaskRecyclerListFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_MODE, mode);
-
         fragment.setArguments(args);
         return fragment;
     }
 
+    public TaskRecyclerListFragment() { }
+
     public void refresh(int version) {
-        mAdapter.refresh(version);
+        mListAdapter.refresh(version);
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
-            mCallback = (TaskManipulationListener) activity;
+            mTaskChangeListener = (TaskChangeListener) context;
+            mTaskProvider = (TaskProvider) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnHeadlineSelectedListener");
         }
     }
@@ -81,7 +82,7 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mNewButton = (FloatingActionButton) container.getRootView().findViewById(R.id.fab);
+        mNewFloatingButton = (FloatingActionButton) container.getRootView().findViewById(R.id.fab);
         return new RecyclerView(container.getContext());
     }
 
@@ -92,34 +93,39 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
         Bundle args = getArguments();
         int mode = args.getInt(ARG_MODE);
 
-        mAdapter = new TaskRecyclerListAdapter(getActivity(), this, mode);
+        if(mode == R.string.title_priority)
+            mListAdapter = new PriorityTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
+                (RecyclerListItemStartDragListener)this);
+        else if(mode == R.string.title_willingness)
+            mListAdapter = new WillingnessTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
+                    (RecyclerListItemStartDragListener)this);
+        else // FIXME: replace w/ awaiting
+            mListAdapter = new PriorityTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
+                    (RecyclerListItemStartDragListener)this);
 
         LinearLayoutManager llm = new LinearLayoutManager(getActivity());
 
         RecyclerView recyclerView = (RecyclerView) view;
         recyclerView.setHasFixedSize(true);
-        recyclerView.setAdapter(mAdapter);
+        recyclerView.setAdapter(mListAdapter);
         recyclerView.setLayoutManager(llm);
 
         // floating action button
-        mNewButton.attachToRecyclerView(recyclerView);
-        mNewButton.setOnClickListener(new View.OnClickListener() {
+        mNewFloatingButton.attachToRecyclerView(recyclerView);
+        mNewFloatingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), TaskCreateActivity.class);
-                getActivity().startActivityForResult(intent, MainActivity.INTENT_CREATE_TASK);
+                startCreateTaskActivity();
             }
         });
 
-        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mAdapter);
-
-        mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper = new ItemTouchHelper(new SimpleItemTouchHelperCallback(mListAdapter));
         mItemTouchHelper.attachToRecyclerView(recyclerView);
 
     }
 
     public void onCreateTask(TaskListItem item) {
-        mAdapter.onItemCreate(0, item);
+        mListAdapter.onItemCreate(0, item);
     }
 
     @Override
@@ -127,13 +133,9 @@ public class TaskRecyclerListFragment extends Fragment implements OnStartDragLis
         mItemTouchHelper.startDrag(viewHolder);
     }
 
-    interface TaskManipulationListener {
-        void onTaskCreated(Task task);
-
-        void onTaskPrioritySwapped(long id1, long id2);
-
-        void onTaskWillingnessSwapped(long id1, long id2);
-
-        void onTaskRemoved(long id);
+    private void startCreateTaskActivity() {
+        Intent intent = new Intent(getActivity(), TaskCreateActivity.class);
+        getActivity().startActivityForResult(intent, MainActivity.INTENT_CREATE_TASK);
     }
+
 }

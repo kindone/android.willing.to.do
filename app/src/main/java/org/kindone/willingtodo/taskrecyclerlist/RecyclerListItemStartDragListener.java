@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package org.kindone.willingtodo.helper;
+package org.kindone.willingtodo.taskrecyclerlist;
 
 import android.support.v7.widget.RecyclerView;
 
 /**
  * Listener for manual initiation of a drag.
  */
-public interface OnStartDragListener {
+public interface RecyclerListItemStartDragListener {
 
     /**
      * Called when a view is requesting a start of a drag.

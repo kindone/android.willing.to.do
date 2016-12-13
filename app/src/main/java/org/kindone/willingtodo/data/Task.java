@@ -1,4 +1,4 @@
-package org.kindone.willingtodo;
+package org.kindone.willingtodo.data;
 
 /**
  * Created by kindone on 2015. 11. 7..
