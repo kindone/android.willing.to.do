@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.kindone.willingtodo.helper;
+package org.kindone.willingtodo.touchhelper;
 
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;

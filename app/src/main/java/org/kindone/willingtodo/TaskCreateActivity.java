@@ -41,6 +41,7 @@ public class TaskCreateActivity extends AppCompatActivity {
     {
         Intent intent = this.getIntent();
         intent.putExtra(MainActivity.RESULT_CREATE_TASK_TITLE, getTaskTitle());
+        intent.putExtra(MainActivity.RESULT_CREATE_TASK_CONTEXT_ID, 1L);
 
         if (getParent() == null) {
             setResult(RESULT_OK, intent);

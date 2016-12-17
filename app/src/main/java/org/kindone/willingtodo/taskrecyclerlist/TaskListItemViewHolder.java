@@ -7,7 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.kindone.willingtodo.R;
-import org.kindone.willingtodo.helper.ItemTouchHelperViewHolder;
+import org.kindone.willingtodo.touchhelper.ItemTouchHelperViewHolder;
 
 /**
  * Simple example of a view holder that implements helper.ItemTouchHelperViewHolder and has a

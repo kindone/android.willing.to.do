@@ -34,13 +34,14 @@ import org.kindone.willingtodo.MainActivity;
 import org.kindone.willingtodo.R;
 import org.kindone.willingtodo.TaskCreateActivity;
 import org.kindone.willingtodo.data.TaskListItem;
-import org.kindone.willingtodo.helper.SimpleItemTouchHelperCallback;
+import org.kindone.willingtodo.touchhelper.SimpleItemTouchHelperCallback;
 
 /**
  * @author Paul Burke (ipaulpro)
  */
 public class TaskRecyclerListFragment extends Fragment implements RecyclerListItemStartDragListener {
 
+    private static final String ARG_CONTEXT_ID = "context_id";
     private static final String ARG_MODE = "mode";
 
     private ItemTouchHelper mItemTouchHelper;
@@ -49,15 +50,15 @@ public class TaskRecyclerListFragment extends Fragment implements RecyclerListIt
     private TaskProvider mTaskProvider;
     private TaskRecyclerListAdapterBase mListAdapter;
 
-    public static TaskRecyclerListFragment create(int mode) {
+    public static TaskRecyclerListFragment create(long contextId) {
         TaskRecyclerListFragment fragment = new TaskRecyclerListFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_MODE, mode);
+        args.putLong(ARG_CONTEXT_ID, contextId);
         fragment.setArguments(args);
         return fragment;
     }
 
-    public TaskRecyclerListFragment() { }
+    public TaskRecyclerListFragment() { super();}
 
     public void refresh(int version) {
         mListAdapter.refresh(version);
@@ -91,16 +92,9 @@ public class TaskRecyclerListFragment extends Fragment implements RecyclerListIt
         super.onViewCreated(view, savedInstanceState);
 
         Bundle args = getArguments();
-        int mode = args.getInt(ARG_MODE);
+        long contextId = args.getLong(ARG_CONTEXT_ID);
 
-        if(mode == R.string.title_priority)
-            mListAdapter = new PriorityTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
-                (RecyclerListItemStartDragListener)this);
-        else if(mode == R.string.title_willingness)
-            mListAdapter = new WillingnessTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
-                    (RecyclerListItemStartDragListener)this);
-        else // FIXME: replace w/ awaiting
-            mListAdapter = new PriorityTaskRecyclerListAdapter(mTaskProvider, mTaskChangeListener,
+        mListAdapter = new TaskRecyclerListAdapterBase(contextId, mTaskProvider, mTaskChangeListener,
                     (RecyclerListItemStartDragListener)this);
 
         LinearLayoutManager llm = new LinearLayoutManager(getActivity());

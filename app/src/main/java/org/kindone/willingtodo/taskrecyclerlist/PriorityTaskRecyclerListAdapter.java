@@ -9,11 +9,11 @@ import java.util.List;
  */
 
 public class PriorityTaskRecyclerListAdapter extends TaskRecyclerListAdapterBase {
-    public PriorityTaskRecyclerListAdapter(TaskProvider taskProvider,
+    public PriorityTaskRecyclerListAdapter(long contextId, TaskProvider taskProvider,
                                            TaskChangeListener taskChangeListener,
                                            RecyclerListItemStartDragListener dragStartListener)
     {
-        super(taskProvider, taskChangeListener, dragStartListener);
+        super(contextId, taskProvider, taskChangeListener, dragStartListener);
     }
 
     protected List<Task> loadTasks()

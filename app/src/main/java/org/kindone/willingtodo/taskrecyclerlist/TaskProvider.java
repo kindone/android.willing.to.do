@@ -10,7 +10,10 @@ import java.util.List;
 public interface TaskProvider {
     int getVersion();
 
-    List<Task> loadTasksOrderedByPriority();
+    List<Task> loadTasksOrderedByPriority(long contextId);
 
-    List<Task> loadTasksOrderedByWillingness();
+    List<Task> loadTasksOrderedByWillingness(long contextId);
+
+    int getMode(long contextId);
+    void setMode(long contextId, int mode);
 }

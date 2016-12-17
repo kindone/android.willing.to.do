@@ -26,7 +26,7 @@ import android.view.ViewGroup;
 import org.kindone.willingtodo.R;
 import org.kindone.willingtodo.data.Task;
 import org.kindone.willingtodo.data.TaskListItem;
-import org.kindone.willingtodo.helper.ItemTouchHelperAdapter;
+import org.kindone.willingtodo.touchhelper.ItemTouchHelperAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +38,7 @@ import java.util.List;
  *
  * @author Paul Burke (ipaulpro)
  */
-public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<TaskListItemViewHolder>
+public class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<TaskListItemViewHolder>
         implements ItemTouchHelperAdapter {
 
     private final List<TaskListItem> mItems = new ArrayList<>();
@@ -46,10 +46,13 @@ public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<T
     private final TaskChangeListener mTaskChangeListener;
     private TaskProvider mTaskProvider;
     private int mVersion;
+    private final long contextId;
+    private boolean orderByWillingness;
 
-    public TaskRecyclerListAdapterBase(TaskProvider taskProvider,
+    public TaskRecyclerListAdapterBase(long contextId, TaskProvider taskProvider,
                                        TaskChangeListener taskChangeListener,
                                        RecyclerListItemStartDragListener dragStartListener) {
+        this.contextId = contextId;
         mDragStartListener = dragStartListener;
         mTaskProvider = (TaskProvider) taskProvider;
         mTaskChangeListener = (TaskChangeListener) taskChangeListener;
@@ -71,6 +74,7 @@ public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<T
         }
 
         mVersion = mTaskProvider.getVersion();
+        orderByWillingness = mTaskProvider.getMode(contextId) == 1;
     }
 
     public void refresh(int version) {
@@ -78,6 +82,14 @@ public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<T
             reloadFromProvider();
             notifyDataSetChanged();
         }
+    }
+
+    public void orderByPriority() {
+        mTaskProvider.setMode(contextId, 0);
+    }
+
+    public void orderByWillingness() {
+        mTaskProvider.setMode(contextId, 1);
     }
 
     @Override
@@ -134,14 +146,19 @@ public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<T
         return mItems.size();
     }
 
-    protected abstract List<Task> loadTasks();
+    protected List<Task> loadTasks() {
+        if(orderByWillingness)
+            return loadTasksOrderedByWillingness();
+        else
+            return loadTasksOrderedByPriority();
+    }
 
     protected List<Task> loadTasksOrderedByPriority() {
-        return mTaskProvider.loadTasksOrderedByPriority();
+        return mTaskProvider.loadTasksOrderedByPriority(contextId);
     }
 
     protected List<Task> loadTasksOrderedByWillingness() {
-        return mTaskProvider.loadTasksOrderedByWillingness();
+        return mTaskProvider.loadTasksOrderedByWillingness(contextId);
     }
 
     private void tellTaskCreated(Task task)
@@ -154,7 +171,12 @@ public abstract class TaskRecyclerListAdapterBase extends RecyclerView.Adapter<T
         mTaskChangeListener.onTaskRemoved(taskId);
     }
 
-    protected abstract void tellTaskSwapped(long itemId1, long itemId2);
+    protected void tellTaskSwapped(long itemId1, long itemId2) {
+        if(orderByWillingness)
+            tellTaskWillingnessSwapped(itemId1, itemId2);
+        else
+            tellTaskPrioritySwapped(itemId1, itemId2);
+    }
 
     protected void tellTaskPrioritySwapped(long itemId1, long itemId2)
     {

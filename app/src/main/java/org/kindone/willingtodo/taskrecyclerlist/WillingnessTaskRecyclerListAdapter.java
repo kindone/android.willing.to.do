@@ -9,11 +9,11 @@ import java.util.List;
  */
 
 public class WillingnessTaskRecyclerListAdapter extends TaskRecyclerListAdapterBase {
-    public WillingnessTaskRecyclerListAdapter(TaskProvider taskProvider,
+    public WillingnessTaskRecyclerListAdapter(long contextId, TaskProvider taskProvider,
                                               TaskChangeListener taskChangeListener,
                                               RecyclerListItemStartDragListener dragStartListener)
     {
-        super(taskProvider, taskChangeListener, dragStartListener);
+        super(contextId, taskProvider, taskChangeListener, dragStartListener);
     }
 
     protected List<Task> loadTasks()

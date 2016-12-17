@@ -6,13 +6,13 @@ package org.kindone.willingtodo.data;
 
 class TimerEntry {
 
-    Long id;
-    Long taskId;
-    String title;
-    int durationMin;
-    Long startedMs;
-    boolean isPaused;
-    Long elapsedMs;
+    public final Long id;
+    public final Long taskId;
+    public final String title;
+    public final int durationMin;
+    public final Long startedMs;
+    public final boolean isPaused;
+    public final Long elapsedMs;
 
     public TimerEntry(Long id, Long taskId, String title, int durationMin, Long startedMs, boolean isPaused, Long elapsedMs)
     {
@@ -24,14 +24,6 @@ class TimerEntry {
         this.isPaused = isPaused;
         this.elapsedMs = elapsedMs;
     }
-
-    public Long getId() { return id; }
-    public Long getTaskId() { return taskId; }
-    public String getTitle() { return title; }
-    public int getDurationMin() { return durationMin; }
-    public Long getStartedMs() { return startedMs; }
-    public boolean getIsPaused() { return isPaused; }
-    public Long getElapsedMs() { return elapsedMs; }
 
     public @Override String toString() {
         return "id = " + id +
