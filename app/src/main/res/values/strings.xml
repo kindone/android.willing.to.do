@@ -8,6 +8,8 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="action_sort_by_priority">P</string>
+    <string name="action_sort_by_willingness">W</string>
     <string name="action_manage_contexts">Manage Contexts</string>
 
     <string name="action_example">Example action</string>
@@ -15,5 +17,10 @@
     <string name="action_settings2">Settings</string>
 
     <string name="title_activity_task_create">New Task</string>
+    <string name="title_activity_task_edit">Edit Task</string>
+
+    <string name="title_activity_manage_context">Manage Contexts</string>
+    <string name="title_activity_context_create">New Context</string>
+
 
 </resources>

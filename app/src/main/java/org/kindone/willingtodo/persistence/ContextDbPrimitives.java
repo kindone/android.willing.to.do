@@ -31,6 +31,16 @@ public class ContextDbPrimitives {
         stmt.executeInsert();
     }
 
+    public long insertContext(SQLiteDatabase db, TaskContext context) {
+
+        SQLiteStatement stmt = db.compileStatement("INSERT INTO " + tableName + " (name, position) " +
+                "VALUES (?, (SELECT IFNULL(MAX(position),0) FROM " + tableName + ")+1)");
+        stmt.bindAllArgsAsStrings(new String[]{context.name});
+
+        return stmt.executeInsert();
+    }
+
+
     public TaskContext getContextFromCurrentStarCursor(Cursor cursor) {
         long id = cursor.getLong(0);
         String name = cursor.getString(1);
@@ -42,6 +52,12 @@ public class ContextDbPrimitives {
 
     public Cursor selectAllContextsOrderedByPosition(SQLiteDatabase db) {
         Cursor cursor = db.rawQuery("select * from " + tableName + " order by position asc, _id desc", null);
+        return cursor;
+    }
+
+    public Cursor selectContextByRowId(SQLiteDatabase db, long id) {
+        Cursor cursor = db.rawQuery("select * from " + tableName + " where rowid = "
+                + String.valueOf(id), null);
         return cursor;
     }
 
@@ -68,6 +84,21 @@ public class ContextDbPrimitives {
         ContentValues values = new ContentValues();
         values.put("mode", mode);
         db.update(tableName, values, "_id = ?", selectionArgs);
+    }
 
+    public int setIntColumnValue(SQLiteDatabase db, String columnName, long targetId, int value) {
+        SQLiteStatement stmt = db.compileStatement("UPDATE " + tableName + " SET " + columnName + " = ?" + "WHERE _id = ?");
+        stmt.bindAllArgsAsStrings(new String[]{String.valueOf(value), String.valueOf(targetId)});
+        int numRowsAffected = stmt.executeUpdateDelete();
+        return numRowsAffected;
+    }
+
+    public int getIntColumnValue(SQLiteDatabase db, String columnName, long taskId) {
+        int value = 0;
+        Cursor cursor = db.rawQuery("select " + columnName + " from " + tableName + " where _id = " + String.valueOf(taskId), null);
+        if (cursor.moveToNext()) {
+            value = cursor.getInt(0);
+        }
+        return value;
     }
 }

@@ -2,10 +2,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
-    <!--<item-->
-        <!--android:id="@+id/action_example"-->
-        <!--android:title="@string/action_example"-->
-        <!--app:showAsAction="withText|ifRoom" />-->
+    <item
+        android:id="@+id/action_sort_by_priority"
+        android:icon="@drawable/ic_lightbulb_outline_white_24dp"
+        android:title="@string/action_sort_by_priority"
+        android:visible="false"
+        app:showAsAction="withText|ifRoom" />
+    <item
+        android:id="@+id/action_sort_by_willingness"
+        android:icon="@drawable/ic_favorite_border_white_24dp"
+        android:title="@string/action_sort_by_willingness"
+        android:visible="true"
+        app:showAsAction="withText|ifRoom" />
     <item
         android:id="@+id/action_manage_contexts"
         android:title="@string/action_manage_contexts"

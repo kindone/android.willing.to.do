@@ -36,6 +36,16 @@ public class TaskDbPrimitives {
         stmt.executeInsert();
     }
 
+    public long insertTask(SQLiteDatabase db, Task task)
+    {
+        SQLiteStatement stmt = db.compileStatement("INSERT INTO " + tableName + " (title, context_id, category, deadline, priority, willingness) " +
+                "VALUES (?, ?, ?, ?, (SELECT IFNULL(MAX(priority),0) FROM " + tableName + ")+1, " +
+                "(SELECT IFNULL(MAX(willingness),0) FROM " + tableName + ")+1)");
+        stmt.bindAllArgsAsStrings(new String[]{task.title, String.valueOf(task.contextId), task.category, task.deadline});
+
+        return stmt.executeInsert();
+    }
+
     public Task getTaskFromCurrentStarCursor(Cursor cursor) {
         long id = cursor.getLong(0);
         String title = cursor.getString(1);
@@ -61,15 +71,6 @@ public class TaskDbPrimitives {
         return values;
     }
 
-//    public int copyColumnValue(SQLiteDatabase db, String columnName, long targetId, long srcId) {
-//        // id1's priority = id2's priority
-//        Log.v(TAG, "copy value of id1=" + srcId + " to id2=" + targetId + " for column=" + columnName);
-//        SQLiteStatement stmt = db.compileStatement("UPDATE " + tableName + " SET " + columnName + " = (SELECT " + columnName + " FROM " + tableName + " WHERE _id = ?)" + "WHERE _id = ?");
-//        stmt.bindAllArgsAsStrings(new String[]{String.valueOf(srcId), String.valueOf(targetId)});
-//        int numRowsAffected = stmt.executeUpdateDelete();
-//        return numRowsAffected;
-//    }
-
     public int setIntColumnValue(SQLiteDatabase db, String columnName, long targetId, int value) {
         SQLiteStatement stmt = db.compileStatement("UPDATE " + tableName + " SET " + columnName + " = ?" + "WHERE _id = ?");
         stmt.bindAllArgsAsStrings(new String[]{String.valueOf(value), String.valueOf(targetId)});
@@ -80,7 +81,7 @@ public class TaskDbPrimitives {
     public int getIntColumnForTaskId(SQLiteDatabase db, String columnName, long taskId) {
         int value = 0;
         Cursor cursor = db.rawQuery("select " + columnName + " from " + tableName + " where _id = " + String.valueOf(taskId), null);
-        while (cursor.moveToNext()) {
+        if (cursor.moveToNext()) {
             value = cursor.getInt(0);
         }
         return value;

@@ -1,21 +1,19 @@
 package org.kindone.willingtodo;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
-public class TaskCreateActivity extends AppCompatActivity {
+public class ContextCreateActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_task_create);
+        setContentView(R.layout.activity_context_create);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -23,7 +21,7 @@ public class TaskCreateActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.task_create, menu);
+        getMenuInflater().inflate(R.menu.context_create, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -39,24 +37,10 @@ public class TaskCreateActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onResume() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        InputMethodManager immhide = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        immhide.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-        super.onPause();
-    }
-
     private void setResult()
     {
         Intent intent = this.getIntent();
-        intent.putExtra(MainActivity.RESULT_TASK_TITLE, getTaskTitle());
+        intent.putExtra(MainActivity.RESULT_CREATE_CONTEXT_TITLE, getContextTitle());
 
         if (getParent() == null) {
             setResult(RESULT_OK, intent);
@@ -66,7 +50,7 @@ public class TaskCreateActivity extends AppCompatActivity {
         finish();
     }
 
-    private String getTaskTitle() {
+    private String getContextTitle() {
         EditText titleText = (EditText) findViewById(R.id.titleEditText);
         return titleText.getText().toString();
     }

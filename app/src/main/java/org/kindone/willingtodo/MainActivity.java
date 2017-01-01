@@ -1,6 +1,5 @@
 package org.kindone.willingtodo;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -10,47 +9,58 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import org.kindone.willingtodo.data.Task;
 import org.kindone.willingtodo.data.TaskContext;
 import org.kindone.willingtodo.data.TaskListItem;
-import org.kindone.willingtodo.persistence.DbHelper;
-import org.kindone.willingtodo.taskrecyclerlist.TaskChangeListener;
-import org.kindone.willingtodo.taskrecyclerlist.TaskProvider;
-import org.kindone.willingtodo.taskrecyclerlist.TaskRecyclerListFragment;
+import org.kindone.willingtodo.persistence.ConfigProvider;
+import org.kindone.willingtodo.persistence.SqliteHelper;
+import org.kindone.willingtodo.persistence.PersistenceProvider;
+import org.kindone.willingtodo.persistence.TaskContextProvider;
+import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.pomodorotimer.PomodoroTimerService;
+import org.kindone.willingtodo.recyclerlist.RecyclerListItem;
+import org.kindone.willingtodo.recyclerlist.task.TaskRecyclerListFragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity
-        implements TaskChangeListener, TaskProvider {
+        implements PersistenceProvider {
 
+    public static String TAG = "MainActivity";
     public static int INTENT_CREATE_TASK = 1;
-    public static String RESULT_CREATE_TASK_TITLE = "RESULT_CREATE_TASK_TITLE";
+    public static int INTENT_EDIT_TASK = 2;
+    public static int INTENT_MANAGE_CONTEXT = 3;
+    public static String RESULT_TASK_TITLE = "RESULT_TASK_TITLE";
+    public static String RESULT_TASK_ID = "RESULT_TASK_ID";
     public static String RESULT_CREATE_TASK_CONTEXT_ID = "RESULT_CREATE_CONTEXT_ID";
     public static String RESULT_CREATE_TASK_DEADLINE = "RESULT_CREATE_TASK_DEADLINE";
+    public static String RESULT_CREATE_CONTEXT_TITLE = "RESULT_CREATE_CONTEXT_TITLE";
 
-    private DbHelper mDbHelper = new DbHelper((Context) this, "test", null/*default cursorfactory*/, 1/*version*/);
+
     private TaskRecyclerListFragment mCurrentTaskListFragment;
+    private Menu mMenu;
+    private ViewPager mViewPager;
+    private SQLPersistenceProvider mPersistenceProvider = new SQLPersistenceProvider(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initToolbar();
-        ViewPager viewPager = initViewPager();
-        initTabLayout(viewPager);
-        mCurrentTaskListFragment = (TaskRecyclerListFragment) ((ContextViewPagerAdapter) viewPager.getAdapter()).getItem(viewPager.getCurrentItem());
+        mViewPager = initViewPager();
+        initTabLayout(mViewPager);
     }
 
     private void initToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
     }
 
     private ViewPager initViewPager() {
@@ -61,7 +71,7 @@ public class MainActivity extends AppCompatActivity
 
         adapter.clear();
 
-        List<TaskContext> taskContexts = mDbHelper.getTaskContexts();
+        List<TaskContext> taskContexts = mPersistenceProvider.getContextProvider().getTaskContexts();
 
         for (TaskContext taskContext : taskContexts) {
             adapter.addFragment(taskContext.id, TaskRecyclerListFragment.create(taskContext.id), taskContext.name);
@@ -77,10 +87,19 @@ public class MainActivity extends AppCompatActivity
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                Log.v(TAG, "tab selected:" +  tab.getPosition());
                 viewPager.setCurrentItem(tab.getPosition());
                 ContextViewPagerAdapter adapter = (ContextViewPagerAdapter) viewPager.getAdapter();
                 mCurrentTaskListFragment = (TaskRecyclerListFragment) adapter.getItem(tab.getPosition());
-                mCurrentTaskListFragment.refresh(mDbHelper.getVersion());
+                mCurrentTaskListFragment.refresh(mPersistenceProvider.getTaskProvider().getVersion());
+                // FIXME: better solution?
+                int mode = mPersistenceProvider.getContextProvider().getMode(adapter.getContextId(tab.getPosition()));
+                setPriorityAndWillingnessButton(mode);
+                if(mode == SqliteHelper.MODE_PRIORITY)
+                    mCurrentTaskListFragment.setPriorityOrdered();
+                else if(mode == SqliteHelper.MODE_WILLINGNESS)
+                    mCurrentTaskListFragment.setWillingnessOrdered();
+                mPersistenceProvider.getConfigProvider().saveTabIndex(tab.getPosition());
             }
 
             @Override
@@ -90,16 +109,23 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-                ContextViewPagerAdapter adapter = (ContextViewPagerAdapter) viewPager.getAdapter();
-                mCurrentTaskListFragment = (TaskRecyclerListFragment) adapter.getItem(tab.getPosition());
-                mCurrentTaskListFragment.refresh(mDbHelper.getVersion());
+                onTabSelected(tab);
+                mPersistenceProvider.getConfigProvider().saveTabIndex(tab.getPosition());
             }
         });
     }
 
     @Override
+    protected void onResume() {
+        Log.v(TAG, "resumed: "+ mPersistenceProvider.getConfigProvider().getTabIndex());
+        mViewPager.setCurrentItem(mPersistenceProvider.getConfigProvider().getTabIndex());
+        mCurrentTaskListFragment = (TaskRecyclerListFragment) ((ContextViewPagerAdapter) mViewPager.getAdapter()).getItem(mViewPager.getCurrentItem());
+        super.onResume();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        mMenu = menu;
         getMenuInflater().inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -109,11 +135,43 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.action_manage_contexts) {
-            // TODO: start 'manage contexts' activity
+            Intent intent = new Intent(this, ManageContextActivity.class);
+            startActivityForResult(intent, INTENT_MANAGE_CONTEXT);
+            return true;
+        }
+        else if(id == R.id.action_sort_by_priority) {
+            Log.i(TAG, "Mode Priority");
+            mPersistenceProvider.getContextProvider().setMode(getCurrentContextId(), SqliteHelper.MODE_PRIORITY);
+            mCurrentTaskListFragment.refresh(mPersistenceProvider.getVersion());
+            setPriorityAndWillingnessButton(SqliteHelper.MODE_PRIORITY);
+            mCurrentTaskListFragment.setPriorityOrdered();
+            return true;
+        }
+        else if(id == R.id.action_sort_by_willingness) {
+            Log.i(TAG, "Mode Willingness");
+            mPersistenceProvider.getContextProvider().setMode(getCurrentContextId(), SqliteHelper.MODE_WILLINGNESS);
+            mCurrentTaskListFragment.refresh(mPersistenceProvider.getVersion());
+            setPriorityAndWillingnessButton(SqliteHelper.MODE_WILLINGNESS);
+            mCurrentTaskListFragment.setWillingnessOrdered();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void setPriorityAndWillingnessButton(int mode) {
+        if(mMenu == null)
+            return;
+        MenuItem pItem = mMenu.findItem(R.id.action_sort_by_priority);
+        MenuItem wItem = mMenu.findItem(R.id.action_sort_by_willingness);
+        if(mode == SqliteHelper.MODE_PRIORITY) {
+            pItem.setVisible(false);
+            wItem.setVisible(true);
+        }
+        else {
+            pItem.setVisible(true);
+            wItem.setVisible(false);
+        }
     }
 
     @Override
@@ -122,53 +180,36 @@ public class MainActivity extends AppCompatActivity
 
         if (requestCode == INTENT_CREATE_TASK) {
             if (resultCode == RESULT_OK) {
-                String name = data.getStringExtra(RESULT_CREATE_TASK_TITLE);
+                String title = data.getStringExtra(RESULT_TASK_TITLE);
                 long contextId = getCurrentContextId();
-                mCurrentTaskListFragment.onCreateTask(new TaskListItem(new Task(0, name, contextId, "", "", 0, 0)));
+                mCurrentTaskListFragment.onCreateItem(new TaskListItem(new Task(0, title, contextId, "", "", 0, 0)));
             }
         }
+        else if(requestCode == INTENT_EDIT_TASK) {
+            if (resultCode == RESULT_OK) {
+                long id = data.getLongExtra(RESULT_TASK_ID, -1);
+                final String title = data.getStringExtra(RESULT_TASK_TITLE);
+                long contextId = getCurrentContextId();
+                if(id == -1L || title == null)
+                    throw new RuntimeException("Intent did not correctly include required parameter RESULT_TASK_ID");
+
+                mCurrentTaskListFragment.onUpdateItem(id, new RecyclerListItem.Updater() {
+                    @Override
+                    public RecyclerListItem update(RecyclerListItem item) {
+                        Task task = ((TaskListItem)item).getTask();
+                        return new TaskListItem(new Task(task.id, title, task.contextId,
+                                task.category, task.deadline, task.priority, task.willingness));
+                    }
+                });
+            }
+        }
+
     }
 
     public long getCurrentContextId() {
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         ContextViewPagerAdapter adapter = (ContextViewPagerAdapter) viewPager.getAdapter();
         return adapter.getContextId(viewPager.getCurrentItem());
-    }
-
-    public void onTaskCreated(Task task) {
-        mDbHelper.insertTask(task);
-    }
-
-    public void onTaskPrioritySwapped(long id1, long id2) {
-        mDbHelper.swapTaskPriority(id1, id2);
-    }
-
-    public void onTaskWillingnessSwapped(long id1, long id2) {
-        mDbHelper.swapTaskWillingness(id1, id2);
-    }
-
-    public void onTaskRemoved(long id) {
-        mDbHelper.deleteTask(id);
-    }
-
-    public List<Task> loadTasksOrderedByPriority(long contextId) {
-        return mDbHelper.getPriorityOrderedTasks(contextId);
-    }
-
-    public List<Task> loadTasksOrderedByWillingness(long contextId) {
-        return mDbHelper.getWillingnessOrderedTasks(contextId);
-    }
-
-    public int getMode(long contextId) {
-        return mDbHelper.getContextMode(contextId);
-    }
-
-    public void setMode(long contextId, int mode) {
-        mDbHelper.setContextMode(contextId, mode);
-    }
-
-    public int getVersion() {
-        return mDbHelper.getVersion();
     }
 
 
@@ -194,8 +235,6 @@ public class MainActivity extends AppCompatActivity
             return list.get(position).fragment;
         }
 
-        public String getTitle(int position) { return list.get(position).title; }
-
         public long getContextId(int position) { return list.get(position).contextId; }
 
         @Override
@@ -215,6 +254,26 @@ public class MainActivity extends AppCompatActivity
         public void addFragment(long contextId, Fragment fragment, String title) {
             list.add(new AdapterElement(contextId, fragment, title));
         }
+    }
+
+    @Override
+    public TaskContextProvider getContextProvider() {
+        return mPersistenceProvider.getContextProvider();
+    }
+
+    @Override
+    public TaskProvider getTaskProvider() {
+        return mPersistenceProvider.getTaskProvider();
+    }
+
+    @Override
+    public ConfigProvider getConfigProvider() {
+        return mPersistenceProvider.getConfigProvider();
+    }
+
+    @Override
+    public int getVersion() {
+        return mPersistenceProvider.getVersion();
     }
 
 }

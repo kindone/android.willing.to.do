@@ -16,21 +16,26 @@ import java.util.List;
 /**
  * Created by kindone on 2015. 11. 7..
  */
-public class DbHelper extends SQLiteOpenHelper {
+public class SqliteHelper extends SQLiteOpenHelper {
 
-    private static final String TAG = "DbHelper";
-    public final String contextTableName = "CONTEXTS";
-    public final String taskTableName = "TASKS";
-    public final String timerTableName = "TIMERS";
+    private static final String TAG = "SqliteHelper";
+    public static final int MODE_PRIORITY = 0;
+    public static final int MODE_WILLINGNESS = 1;
+    public static final String contextTableName = "CONTEXTS";
+    public static final String taskTableName = "TASKS";
+    public static final String timerTableName = "TIMERS";
+    public static final String configTableName = "CONFIGS";
+
     private ContextDbPrimitives contextPrimitives = new ContextDbPrimitives(contextTableName);
     private TaskDbPrimitives taskPrimitives = new TaskDbPrimitives(taskTableName);
     private TimerDbPrimitives timerDbPrimitives = new TimerDbPrimitives(timerTableName);
+    private ConfigDbPrimitives configDbPrimitives = new ConfigDbPrimitives(configTableName);
 
-    private final int LatestVersion = 2;
+    private static int LatestVersion = 2;
     private int mVersion; //state propagation
 
-    public DbHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int dbVersion) {
-        super(context, name, factory, dbVersion);
+    public SqliteHelper(Context context, String name, SQLiteDatabase.CursorFactory factory) {
+        super(context, name, factory, LatestVersion);
         mVersion = 0;
     }
 
@@ -44,7 +49,10 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldDbVersion, int newDbVersion) {
-        if (oldDbVersion == 1)
+
+        if(oldDbVersion == 1)
+            configDbPrimitives.createTableIfNotExists(db);
+        else if (oldDbVersion == 2)
             timerDbPrimitives.createTableIfNotExists(db);
     }
 
@@ -64,21 +72,33 @@ public class DbHelper extends SQLiteOpenHelper {
         return contexts;
     }
 
-    public void insertTaskContext(TaskContext context) {
+    private TaskContext getTaskContextByRowId(long id) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = contextPrimitives.selectContextByRowId(db, id);
+        if (cursor.moveToNext()) {
+            TaskContext context = contextPrimitives.getContextFromCurrentStarCursor(cursor);
+            return context;
+        }
+        return null;
+    }
+
+    public TaskContext insertTaskContext(TaskContext context) {
         SQLiteDatabase db = getWritableDatabase();
-
+        long rowId = 0L;
         try {
-            SQLiteStatement stmt = db.compileStatement("INSERT INTO " + taskTableName + " (name, position) " +
-                    "VALUES (?, ?) FROM " + taskTableName);
-            stmt.bindAllArgsAsStrings(new String[]{context.name, String.valueOf(context.position)});
+            rowId = contextPrimitives.insertContext(db, context);
+            Log.e(TAG, "insert result: rowId=" + rowId);
 
-            long row = stmt.executeInsert();
-            Log.e(TAG, "insert result: rowId=" + row);
         } catch (Exception e) {
             Log.e(TAG, "insertTaskContext error: message=" + e.getMessage());
         } finally {
             db.close();
             increaseVersion();
+            TaskContext newContext = getTaskContextByRowId(rowId);
+            if(newContext == null)
+                throw new RuntimeException("null object");
+            return newContext;
+
         }
     }
 
@@ -124,6 +144,40 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    public void swapTaskContext(long id1, long id2) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        db.beginTransaction();
+
+        try {
+            // save id1's value
+            int id1_value = contextPrimitives.getIntColumnValue(db, "position", id1);
+            Log.v(TAG, "swapContext val1=" + id1_value);
+            int id2_value = contextPrimitives.getIntColumnValue(db, "position", id2);
+            Log.v(TAG, "swapContext val2=" + id2_value);
+            int numRowsAffected = contextPrimitives.setIntColumnValue(db, "position", id2, -1);
+
+            // set id1's value to id2's value
+            numRowsAffected += contextPrimitives.setIntColumnValue(db, "position", id1, id2_value);
+            // set id2's value
+            numRowsAffected += contextPrimitives.setIntColumnValue(db, "position", id2, id1_value);
+            if (numRowsAffected == 3 &&
+                    contextPrimitives.getIntColumnValue(db, "position", id1) !=
+                            contextPrimitives.getIntColumnValue(db, "position", id2)) {
+                db.setTransactionSuccessful();
+            }
+            else
+                Log.e(TAG, "swapContext was not done properly. Affected rows=" + numRowsAffected);
+        } catch (Exception e) {
+            Log.v(TAG, "swapContext error: Exception=" + e.toString());
+            throw e;
+        } finally {
+            db.endTransaction();
+            db.close();
+            increaseVersion();
+        }
+    }
+
     public List<Task> getPriorityOrderedTasks(long contextId) {
         return getOrderedTasks("priority", contextId);
     }
@@ -147,12 +201,7 @@ public class DbHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
 
         try {
-            SQLiteStatement stmt = db.compileStatement("INSERT INTO " + taskTableName + " (title, context_id, category, deadline, priority, willingness) " +
-                    "VALUES (?, ?, ?, ?, (SELECT IFNULL(MAX(priority),0) FROM " + taskTableName + ")+1, " +
-                    "(SELECT IFNULL(MAX(willingness),0) FROM " + taskTableName + ")+1)");
-            stmt.bindAllArgsAsStrings(new String[]{task.title, String.valueOf(task.contextId), task.category, task.deadline});
-
-            long row = stmt.executeInsert();
+            long row = taskPrimitives.insertTask(db, task);
             Log.e(TAG, "insert result: rowId=" + row);
         } catch (Exception e) {
             Log.e(TAG, "insertTask error: message=" + e.getMessage());
@@ -178,16 +227,16 @@ public class DbHelper extends SQLiteOpenHelper {
         db.beginTransaction();
 
         try {
-            // save id1's priority
+            // save id1's value
             int id1_value = taskPrimitives.getIntColumnForTaskId(db, columnName, id1);
             Log.v(TAG, "swapTask val1=" + id1_value);
             int id2_value = taskPrimitives.getIntColumnForTaskId(db, columnName, id2);
             Log.v(TAG, "swapTask val1=" + id2_value);
             int numRowsAffected = taskPrimitives.setIntColumnValue(db, columnName, id2, -1);
 
-            // set id1's priority to id2's priority
+            // set id1's value to id2's value
             numRowsAffected += taskPrimitives.setIntColumnValue(db, columnName, id1, id2_value);
-            // set id2's priority
+            // set id2's value
             numRowsAffected += taskPrimitives.setIntColumnValue(db, columnName, id2, id1_value);
             if (numRowsAffected == 3 &&
                     taskPrimitives.getIntColumnForTaskId(db, columnName, id1) !=
@@ -235,6 +284,19 @@ public class DbHelper extends SQLiteOpenHelper {
             increaseVersion();
         }
 
-        Log.v(TAG, "deleteTask");
+        Log.v(TAG, "delete: id=" + id);
+    }
+
+    public int getCurrentTabIndex() {
+        SQLiteDatabase db = getReadableDatabase();
+        int tabIndex = configDbPrimitives.getIntValue(db, "tab_index", 0);
+        db.close();
+        return tabIndex;
+    }
+
+    public void setCurrentTabIndex(int index) {
+        SQLiteDatabase db = getWritableDatabase();
+        configDbPrimitives.setValue(db, "tab_index", String.valueOf(index));
+        db.close();
     }
 }

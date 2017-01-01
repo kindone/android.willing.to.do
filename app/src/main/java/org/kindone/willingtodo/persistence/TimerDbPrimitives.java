@@ -22,8 +22,8 @@ public class TimerDbPrimitives {
                 "title TEXT, " +
                 "duration_min INTEGER NOT NULL, " +
                 "started_ms INTEGER NOT NULL," +
-                "is_paused BOOLEAN NOT NULL, " +
                 "elapsed_ms INTEGER NOT NULL," +
+                "is_paused BOOLEAN NOT NULL, " +
                 "is_active BOOLEAN NOT NULL)");
         db.execSQL("CREATE INDEX " + tableName + "_IDX ON " + tableName + "(is_active)");
     }
