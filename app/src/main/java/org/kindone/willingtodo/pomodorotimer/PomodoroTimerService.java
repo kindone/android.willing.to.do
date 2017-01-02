@@ -108,6 +108,7 @@ public class PomodoroTimerService extends Service implements TimerContext{
     }
 
     public void startTicking(long maxDurationMs) {
+        stopTicking();
         mBeeperHandle = scheduler.scheduleAtFixedRate(new Beeper(), 500, 500, TimeUnit.MILLISECONDS);
         scheduler.schedule(new CancelBeeper(), maxDurationMs, TimeUnit.MILLISECONDS);
     }
@@ -130,10 +131,11 @@ public class PomodoroTimerService extends Service implements TimerContext{
 
     class Beeper implements Runnable {
         public void run() {
-            if(getRemainingTimeMs() >= 0)
-                displayTick();
-            else
+            if(getRemainingTimeMs() <= 0) {
                 stopTimer();
+                stopTicking();
+            }
+            displayTick();
         }
     }
 

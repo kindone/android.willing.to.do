@@ -92,7 +92,6 @@ abstract public class RecyclerListFragment extends Fragment implements RecyclerL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mNewFloatingButton = (FloatingActionButton) container.getRootView().findViewById(R.id.fab);
-
         return new LinearLayout(container.getContext());
     }
 
