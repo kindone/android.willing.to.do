@@ -5,6 +5,10 @@ package org.kindone.willingtodo.pomodorocontrol;
  */
 
 abstract public class ControlState {
+    public final static int MODE_STOPPED = 1;
+    public final static int MODE_PAUSED = 1;
+    public final static int MODE_PLAYING = 1;
+
     final ControlContext mContext;
 
     public ControlState(ControlContext context) {
@@ -26,4 +30,6 @@ abstract public class ControlState {
     private void throwUndefined() {
         throw new RuntimeException("undefined change of state");
     }
+
+    abstract public int getMode();
 }

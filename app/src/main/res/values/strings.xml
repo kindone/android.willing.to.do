@@ -22,5 +22,8 @@
     <string name="title_activity_manage_context">Manage Contexts</string>
     <string name="title_activity_context_create">New Context</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 </resources>

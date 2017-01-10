@@ -98,6 +98,10 @@ public class TaskRecyclerListFragment extends RecyclerListFragment {
         getActivity().startService(intent);
     }
 
+    public void startPomodoroControl(Task task) {
+        ((MainActivity)getActivity()).showPomodoroMiniControl();
+    }
+
 
     public void refresh(int version) {
         if(mListAdapter != null)

@@ -28,4 +28,9 @@ public class ControlRunning extends ControlState {
     public void stop() {
         changeState(new ControlStopped(mContext));
     }
+
+    @Override
+    public int getMode() {
+        return MODE_PAUSED;
+    }
 }

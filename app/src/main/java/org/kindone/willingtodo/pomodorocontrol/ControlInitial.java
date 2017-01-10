@@ -28,4 +28,9 @@ public class ControlInitial extends ControlState {
     public void stop() {
         // DO_NOTHING
     }
+
+    @Override
+    public int getMode() {
+        return MODE_PLAYING;
+    }
 }

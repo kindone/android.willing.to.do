@@ -13,4 +13,6 @@
     <color name="colorAccent">#c8e8ff</color>
     <color name="colorPriority">#ef2626</color>
     <color name="colorWilling">#61e429</color>
+
+    <color name="colorBottom">#6e6e6e</color>
 </resources>

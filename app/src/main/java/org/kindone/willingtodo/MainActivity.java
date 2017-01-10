@@ -2,16 +2,20 @@ package org.kindone.willingtodo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.RelativeLayout;
 
 import org.kindone.willingtodo.data.Task;
 import org.kindone.willingtodo.data.TaskContext;
@@ -21,6 +25,7 @@ import org.kindone.willingtodo.persistence.SqliteHelper;
 import org.kindone.willingtodo.persistence.PersistenceProvider;
 import org.kindone.willingtodo.persistence.TaskContextProvider;
 import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.pomodorocontrol.PomodoroControlFragment;
 import org.kindone.willingtodo.pomodorotimer.PomodoroTimerService;
 import org.kindone.willingtodo.recyclerlist.RecyclerListItem;
 import org.kindone.willingtodo.recyclerlist.task.TaskRecyclerListFragment;
@@ -55,6 +60,8 @@ public class MainActivity extends AppCompatActivity
         initToolbar();
         mViewPager = initViewPager();
         initTabLayout(mViewPager);
+
+        initPomodoroControl();
     }
 
     private void initToolbar() {
@@ -114,6 +121,44 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    private void initPomodoroControl()
+    {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        PomodoroControlFragment pomodoro = PomodoroControlFragment.create();
+        fragmentTransaction.add(R.id.main_bottom, pomodoro);
+        fragmentTransaction.commit();
+
+    }
+
+    public void showPomodoroMiniControl()
+    {
+        View body = (View)findViewById(R.id.main_body);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
+        float height = getResources().getDimension(R.dimen.pomodoro_mini_control_height);
+        lp.setMargins(0, 0, 0, (int)height);
+        body.setLayoutParams(lp);
+
+        View footer = (View)findViewById(R.id.main_bottom);
+        footer.setVisibility(View.VISIBLE);
+    }
+
+    public void hidePomodoroMiniControl()
+    {
+        View body = (View)findViewById(R.id.main_body);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
+        lp.setMargins(0, 0, 0, 0);
+        body.setLayoutParams(lp);
+
+        View footer = (View)findViewById(R.id.main_bottom);
+        footer.setVisibility(View.INVISIBLE);
+    }
+
 
     @Override
     protected void onResume() {
