@@ -6,10 +6,10 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListItem;
  * Created by kindone on 2016. 12. 25..
  */
 
-public class ContextListItem implements RecyclerListItem{
+public class TaskContextListItem implements RecyclerListItem{
     private TaskContext context;
 
-    public ContextListItem(TaskContext context) {
+    public TaskContextListItem(TaskContext context) {
         this.context = context;
     }
 
@@ -24,8 +24,7 @@ public class ContextListItem implements RecyclerListItem{
         return context.name;
     }
 
-    public TaskContext getContext() {
-
+    public TaskContext getTaskContext() {
         return context;
     }
 }

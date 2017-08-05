@@ -21,9 +21,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.kindone.willingtodo.R;
-import org.kindone.willingtodo.data.ContextListItem;
+import org.kindone.willingtodo.data.TaskContextListItem;
 import org.kindone.willingtodo.data.TaskContext;
-import org.kindone.willingtodo.persistence.TaskContextProvider;
+import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider;
 import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter;
 import org.kindone.willingtodo.recyclerlist.RecyclerListItem;
 import org.kindone.willingtodo.recyclerlist.RecyclerListItemStartDragListener;
@@ -31,12 +31,12 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListItemViewHolder;
 
 import java.util.List;
 
-public class ContextRecyclerListAdapter extends RecyclerListAdapter<ContextListItem> {
+public class ContextRecyclerListAdapter extends RecyclerListAdapter<TaskContextListItem> {
 
-    private TaskContextProvider mItemProvider;
+    private TaskContextPersistenceProvider mItemProvider;
     private int mVersion;
 
-    public ContextRecyclerListAdapter(TaskContextProvider contextProvider,
+    public ContextRecyclerListAdapter(TaskContextPersistenceProvider contextProvider,
                                       RecyclerListItemStartDragListener dragStartListener) {
         super(dragStartListener);
         mItemProvider = contextProvider;
@@ -55,7 +55,7 @@ public class ContextRecyclerListAdapter extends RecyclerListAdapter<ContextListI
         contexts = loadContexts();
 
         for (int i = 0; i < contexts.size(); i++) {
-            mItems.add(new ContextListItem(contexts.get(i)));
+            mItems.add(new TaskContextListItem(contexts.get(i)));
         }
     }
 
@@ -80,23 +80,23 @@ public class ContextRecyclerListAdapter extends RecyclerListAdapter<ContextListI
 
     protected RecyclerListItem tellItemCreated(RecyclerListItem item)
     {
-        ContextListItem contextListItem = (ContextListItem)item;
-        return new ContextListItem(mItemProvider.create(contextListItem.getContext()));
+        TaskContextListItem taskContextListItem = (TaskContextListItem)item;
+        return new TaskContextListItem(mItemProvider.createTaskContext(taskContextListItem.getTaskContext()));
     }
 
     @Override
     protected void tellItemChanged(RecyclerListItem item) {
-        ContextListItem contextListItem = (ContextListItem)item;
-        mItemProvider.update(contextListItem.getContext());
+        TaskContextListItem taskContextListItem = (TaskContextListItem)item;
+        mItemProvider.updateTaskContext(taskContextListItem.getTaskContext());
     }
 
     protected void tellItemRemoved(long itemId)
     {
-        mItemProvider.delete(itemId);
+        mItemProvider.deleteTaskContext(itemId);
     }
 
     protected void tellItemSwapped(long itemId1, long itemId2) {
-        mItemProvider.swap(itemId1, itemId2);
+        mItemProvider.swapPositionOfTaskContexts(itemId1, itemId2);
     }
 
 

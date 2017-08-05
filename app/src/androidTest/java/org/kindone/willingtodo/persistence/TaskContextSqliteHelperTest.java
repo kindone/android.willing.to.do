@@ -4,10 +4,12 @@ import android.database.sqlite.SQLiteDatabase;
 
 import junit.framework.TestCase;
 
+import org.kindone.willingtodo.persistence.sqlite.TaskContextSqliteHelper;
+
 /**
  * Created by kindone on 2016. 12. 31..
  */
-public class ContextDbPrimitivesTest extends TestCase {
+public class TaskContextSqliteHelperTest extends TestCase {
     private SQLiteDatabase mDatabase;
     private static String tableName = "contexts";
 
@@ -27,12 +29,12 @@ public class ContextDbPrimitivesTest extends TestCase {
     }
 
     public void testCreateTableIfNotExists() throws Exception {
-        ContextDbPrimitives pr = new ContextDbPrimitives(tableName);
+        TaskContextSqliteHelper pr = new TaskContextSqliteHelper(tableName);
         pr.createTableIfNotExists(mDatabase);
     }
 
     public void testInsertDefaultEntries() throws Exception {
-        ContextDbPrimitives pr = new ContextDbPrimitives(tableName);
+        TaskContextSqliteHelper pr = new TaskContextSqliteHelper(tableName);
         pr.createTableIfNotExists(mDatabase);
         pr.insertDefaultEntries(mDatabase);
     }

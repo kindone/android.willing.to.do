@@ -5,70 +5,56 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
-public class TaskCreateActivity extends AppCompatActivity {
+public class TaskCreateActivity extends TaskFormActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_task_create);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        Intent intent = getIntent();
+        String taskTitle = intent.getStringExtra(ARG_TASK_TITLE);
+
+        initializeView(taskTitle);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.task_create, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    protected boolean processOptionItemSelected(MenuItem item)
+    {
         int id = item.getItemId();
 
-        if (id == R.id.action_done) {
-            setResult();
-            return true;
+        switch(id)
+        {
+            case R.id.action_done:
+                setActivityResult(RESULT_OK, getTaskTitle());
+                finish();
+                return true;
+            default:
+                return false;
         }
-
-        return super.onOptionsItemSelected(item);
     }
+
 
     @Override
-    protected void onResume() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        InputMethodManager immhide = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        immhide.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-        super.onPause();
-    }
-
-    private void setResult()
+    protected void setActivityResult(int status, String taskTitle)
     {
         Intent intent = this.getIntent();
-        intent.putExtra(MainActivity.RESULT_TASK_TITLE, getTaskTitle());
+
+        intent.putExtra(ARG_TASK_TITLE, taskTitle);
 
         if (getParent() == null) {
-            setResult(RESULT_OK, intent);
+            setResult(status, intent);
         } else {
-            getParent().setResult(RESULT_OK, intent);
+            getParent().setResult(status, intent);
         }
-        finish();
     }
 
-    private String getTaskTitle() {
-        EditText titleText = (EditText) findViewById(R.id.titleEditText);
-        return titleText.getText().toString();
-    }
+
 
 }

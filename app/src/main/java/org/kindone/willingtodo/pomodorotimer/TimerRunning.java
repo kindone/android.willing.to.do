@@ -6,41 +6,61 @@ package org.kindone.willingtodo.pomodorotimer;
 
 public class TimerRunning extends TimerState {
 
-    final private long mRemainingMs;
+    final private long mDurationMs;
     final private long mStartedMs;
 
-    public TimerRunning(TimerContext context, long remainingMs) {
+    public TimerRunning(TimerContext context, long durationMs) {
         super(context);
         mStartedMs = System.currentTimeMillis();
-        mRemainingMs = remainingMs;
+        mDurationMs = durationMs;
     }
 
-    public void pause() {
+    public TimerRunning(TimerContext context, long durationMs, long startedMs) {
+        super(context);
+        mStartedMs = startedMs;
+        mDurationMs = durationMs;
+    }
+
+    @Override
+    public boolean pause() {
         long elapsedMs = System.currentTimeMillis() - mStartedMs;
-        long remainingMs = mRemainingMs - elapsedMs;
+        long remainingMs = mDurationMs - elapsedMs;
         changeState(new TimerPaused(mContext, remainingMs));
+        return CHANGED;
     }
 
-    public void start() {
+    @Override
+    public boolean start() {
         // DO NOTHING
+        return UNCHANGED;
     }
 
-    public void resume() {
+    @Override
+    public boolean resume() {
         // DO NOTHING
+        return UNCHANGED;
     }
 
-    public void stop() {
+    @Override
+    public boolean stop() {
         changeState(new TimerStopped(mContext));
+        return CHANGED;
     }
 
     @Override
     public long getRemainingTimeMs() {
         long elapsedMs = System.currentTimeMillis() - mStartedMs;
-        long remainingMs = mRemainingMs - elapsedMs;
+        long remainingMs = mDurationMs - elapsedMs;
         return remainingMs > 0 ? remainingMs : 0;
     }
 
+    public long getStartedTimeMs() { return mStartedMs; }
+
     public boolean isRunning() {
         return true;
+    }
+
+    public boolean isStopped() {
+        return false;
     }
 }

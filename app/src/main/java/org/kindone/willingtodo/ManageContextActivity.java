@@ -8,12 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import org.kindone.willingtodo.data.ContextListItem;
+import org.kindone.willingtodo.data.TaskContextListItem;
 import org.kindone.willingtodo.data.TaskContext;
-import org.kindone.willingtodo.persistence.ConfigProvider;
+import org.kindone.willingtodo.persistence.ConfigPersistenceProvider;
 import org.kindone.willingtodo.persistence.PersistenceProvider;
-import org.kindone.willingtodo.persistence.TaskContextProvider;
-import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider;
+import org.kindone.willingtodo.persistence.TaskPersistenceProvider;
 import org.kindone.willingtodo.recyclerlist.context.ContextRecyclerListFragment;
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment;
 
@@ -65,24 +65,24 @@ public class ManageContextActivity extends AppCompatActivity
         if (requestCode == INTENT_CREATE_CONTEXT) {
             if (resultCode == RESULT_OK) {
                 String name = data.getStringExtra(RESULT_CREATE_CONTEXT_TITLE);
-                mCurrentListFragment.onCreateItem(new ContextListItem(new TaskContext(0, name, 0, 0)));
+                mCurrentListFragment.onCreateItem(new TaskContextListItem(new TaskContext(0, name, 0, 0)));
             }
         }
 
     }
 
     @Override
-    public TaskContextProvider getContextProvider() {
-        return mPersistenceProvider.getContextProvider();
+    public TaskContextPersistenceProvider getTaskContextPersistenceProvider() {
+        return mPersistenceProvider.getTaskContextPersistenceProvider();
     }
 
     @Override
-    public TaskProvider getTaskProvider() {
+    public TaskPersistenceProvider getTaskPersistenceProvider() {
         return null;
     }
 
     @Override
-    public ConfigProvider getConfigProvider() {
+    public ConfigPersistenceProvider getConfigPersistenceProvider() {
         return null;
     }
 

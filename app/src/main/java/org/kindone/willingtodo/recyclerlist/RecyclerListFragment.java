@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -18,8 +17,8 @@ import com.melnykov.fab.FloatingActionButton;
 
 import org.kindone.willingtodo.R;
 import org.kindone.willingtodo.persistence.PersistenceProvider;
-import org.kindone.willingtodo.persistence.TaskContextProvider;
-import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider;
+import org.kindone.willingtodo.persistence.TaskPersistenceProvider;
 import org.kindone.willingtodo.touchhelper.SimpleItemTouchHelperCallback;
 
 /**
@@ -29,8 +28,8 @@ abstract public class RecyclerListFragment extends Fragment implements RecyclerL
     protected LinearLayout mLayout;
     protected ItemTouchHelper mItemTouchHelper;
     protected FloatingActionButton mNewFloatingButton;
-    protected TaskProvider mTaskProvider;
-    protected TaskContextProvider mContextProvider;
+    protected TaskPersistenceProvider mTaskPersistenceProvider;
+    protected TaskContextPersistenceProvider mContextProvider;
     protected RecyclerListAdapter mListAdapter;
 
 
@@ -46,12 +45,12 @@ abstract public class RecyclerListFragment extends Fragment implements RecyclerL
         // the callback interface. If not, it throws an exception
         try {
             PersistenceProvider provider = (PersistenceProvider) context;
-            mTaskProvider = provider.getTaskProvider();
-            mContextProvider = provider.getContextProvider();
+            mTaskPersistenceProvider = provider.getTaskPersistenceProvider();
+            mContextProvider = provider.getTaskContextPersistenceProvider();
 
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString()
-                    + " must implement TaskProvider");
+                    + " must implement TaskPersistenceProvider");
         }
     }
 
@@ -70,6 +69,7 @@ abstract public class RecyclerListFragment extends Fragment implements RecyclerL
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(mListAdapter);
         recyclerView.setLayoutManager(llm);
+        recyclerView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         // floating action button
         mNewFloatingButton.attachToRecyclerView(recyclerView);
@@ -96,11 +96,11 @@ abstract public class RecyclerListFragment extends Fragment implements RecyclerL
     }
 
     public void onCreateItem(RecyclerListItem item) {
-        mListAdapter.onItemCreate(mListAdapter.getItemCount(), item);
+        mListAdapter.onCreateItem(mListAdapter.getItemCount(), item);
     }
 
     public void onUpdateItem(RecyclerListItem item) {
-        mListAdapter.onItemUpdate(item);
+        mListAdapter.onUpdateItem(item);
     }
 
     @Override

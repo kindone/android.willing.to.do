@@ -10,24 +10,42 @@ public class TimerStopped extends TimerState {
         super(context);
     }
 
-    public void start() {
-        changeState(new TimerRunning(mContext, mContext.getDurationMs()));
+    @Override
+    public boolean start() {
+        changeStateToRunningWithInheritedDuration();
+        return CHANGED;
     }
 
-    public void stop() {
+    @Override
+    public boolean stop() {
         // DO NOTHING
+        return UNCHANGED;
     }
 
-    public void resume() {
+    @Override
+    public boolean resume() {
         // DO NOTHING
+        return UNCHANGED;
     }
 
-    public void pause() {
+    @Override
+    public boolean pause() {
         // DO NOTHING
+        return UNCHANGED;
     }
+
+    public boolean isRunning() {
+        return false;
+    }
+
+    public boolean isStopped() { return true; }
 
     @Override
     public long getRemainingTimeMs() {
         return 0;
+    }
+
+    private void changeStateToRunningWithInheritedDuration() {
+        changeState(new TimerRunning(mContext, mContext.getDurationMs()));
     }
 }

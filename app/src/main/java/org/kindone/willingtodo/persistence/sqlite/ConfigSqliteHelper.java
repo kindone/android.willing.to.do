@@ -1,4 +1,4 @@
-package org.kindone.willingtodo.persistence;
+package org.kindone.willingtodo.persistence.sqlite;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -12,11 +12,11 @@ import org.kindone.willingtodo.data.TaskContext;
  * Created by kindone on 2016. 12. 14..
  */
 
-public class ConfigDbPrimitives {
-    final static String TAG = "ConfigDbPrimitives";
+public class ConfigSqliteHelper {
+    final static String TAG = "ConfigSqliteHelper";
     final String tableName;
 
-    public ConfigDbPrimitives(String tableName) {
+    public ConfigSqliteHelper(String tableName) {
         this.tableName = tableName;
     }
 
@@ -25,7 +25,15 @@ public class ConfigDbPrimitives {
         db.execSQL("CREATE UNIQUE INDEX " + tableName + "_KEY_IDX ON " + tableName + "(key)");
     }
 
-    public ContentValues getContentValuesForContext(String key, String value) {
+    public int getCurrentTabIndex(SQLiteDatabase db) {
+        return getIntValue(db, "tab_index", 0);
+    }
+
+    public void setCurrentTabIndex(SQLiteDatabase db, int index) {
+        setRawValue(db, "tab_index", String.valueOf(index));
+    }
+
+    private ContentValues prepareContentValues(String key, String value) {
         ContentValues values = new ContentValues();
         values.put("key", key);
         values.put("value", value);
@@ -33,7 +41,7 @@ public class ConfigDbPrimitives {
         return values;
     }
 
-    public String getRawValue(SQLiteDatabase db, String key) {
+    private String getRawValue(SQLiteDatabase db, String key) {
         Cursor cursor = db.rawQuery("select value from " + tableName + " where key = ?", new String[]{key});
         if(cursor.moveToNext()) {
             return cursor.getString(0);
@@ -41,7 +49,7 @@ public class ConfigDbPrimitives {
         return null;
     }
 
-    public int getIntValue(SQLiteDatabase db, String key, int defaultValue) {
+    private int getIntValue(SQLiteDatabase db, String key, int defaultValue) {
         Cursor cursor = db.rawQuery("select value from " + tableName + " where key = ?", new String[]{key});
         if(cursor.moveToNext()) {
             String value = cursor.getString(0);
@@ -51,7 +59,7 @@ public class ConfigDbPrimitives {
     }
 
 
-    public int setValue(SQLiteDatabase db, String key, String value) {
+    private int setRawValue(SQLiteDatabase db, String key, String value) {
         Log.v(TAG, "Set " + key + " = " + value);
         SQLiteStatement stmt = db.compileStatement("INSERT OR REPLACE INTO " + tableName + "(key,value) values(?, ?)");
         stmt.bindAllArgsAsStrings(new String[]{key, value});

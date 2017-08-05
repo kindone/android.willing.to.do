@@ -23,8 +23,8 @@ import android.view.ViewGroup;
 import org.kindone.willingtodo.R;
 import org.kindone.willingtodo.data.Task;
 import org.kindone.willingtodo.data.TaskListItem;
-import org.kindone.willingtodo.persistence.TaskContextProvider;
-import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider;
+import org.kindone.willingtodo.persistence.TaskPersistenceProvider;
 import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter;
 import org.kindone.willingtodo.recyclerlist.RecyclerListItem;
 import org.kindone.willingtodo.recyclerlist.RecyclerListItemStartDragListener;
@@ -34,17 +34,17 @@ import java.util.List;
 
 public class TaskRecyclerListAdapter extends RecyclerListAdapter<TaskListItem> {
 
-    private TaskProvider mItemProvider;
-    private TaskContextProvider mContextProvider;
+    private TaskPersistenceProvider mItemProvider;
+    private TaskContextPersistenceProvider mContextProvider;
     private int mVersion;
     private final long contextId;
 
-    public TaskRecyclerListAdapter(long contextId, TaskProvider taskProvider,
-                                   TaskContextProvider contextProvider,
+    public TaskRecyclerListAdapter(long contextId, TaskPersistenceProvider taskPersistenceProvider,
+                                   TaskContextPersistenceProvider contextProvider,
                                    RecyclerListItemStartDragListener dragStartListener) {
         super(dragStartListener);
         this.contextId = contextId;
-        mItemProvider = taskProvider;
+        mItemProvider = taskPersistenceProvider;
         mContextProvider = contextProvider;
         init();
         mVersion = mItemProvider.getVersion();
@@ -58,7 +58,7 @@ public class TaskRecyclerListAdapter extends RecyclerListAdapter<TaskListItem> {
         mItems.clear();
         List<Task> tasks;
 
-        orderByWillingness = mContextProvider.getMode(contextId) == 1;
+        orderByWillingness = mContextProvider.getModeOfTaskContext(contextId) == 1;
         tasks = loadTasks();
 
         for (int i = 0; i < tasks.size(); i++) {
@@ -75,11 +75,11 @@ public class TaskRecyclerListAdapter extends RecyclerListAdapter<TaskListItem> {
     }
 
     public void reorderByPriority() {
-        mContextProvider.setMode(contextId, 0);
+        mContextProvider.setModeOfTaskContext(contextId, 0);
     }
 
     public void reorderByWillingness() {
-        mContextProvider.setMode(contextId, 1);
+        mContextProvider.setModeOfTaskContext(contextId, 1);
     }
 
     @Override
@@ -105,29 +105,29 @@ public class TaskRecyclerListAdapter extends RecyclerListAdapter<TaskListItem> {
     }
 
     protected List<Task> loadTasksOrderedByPriority() {
-        return mItemProvider.getTasksOrderedByPriority(contextId);
+        return mItemProvider.getTasksOfContextOrderedByPriority(contextId);
     }
 
     protected List<Task> loadTasksOrderedByWillingness() {
-        return mItemProvider.getTasksOrderedByWillingness(contextId);
+        return mItemProvider.getTasksOfContextOrderedByWillingness(contextId);
     }
 
     protected RecyclerListItem tellItemCreated(RecyclerListItem item)
     {
         TaskListItem taskListItem = (TaskListItem)item;
-        mItemProvider.create(taskListItem.getTask());
+        mItemProvider.createTask(taskListItem.getTask());
         return item; // TODO
     }
 
     @Override
     protected void tellItemChanged(RecyclerListItem item) {
         TaskListItem taskListItem = (TaskListItem)item;
-        mItemProvider.update(taskListItem.getTask());
+        mItemProvider.updateTask(taskListItem.getTask());
     }
 
     protected void tellItemRemoved(long taskId)
     {
-        mItemProvider.delete(taskId);
+        mItemProvider.deleteTask(taskId);
     }
 
     protected void tellItemSwapped(long itemId1, long itemId2) {
@@ -139,12 +139,12 @@ public class TaskRecyclerListAdapter extends RecyclerListAdapter<TaskListItem> {
 
     protected void tellTaskPrioritySwapped(long itemId1, long itemId2)
     {
-        mItemProvider.swapPriority(itemId1, itemId2);
+        mItemProvider.swapPriorityOfTasks(itemId1, itemId2);
     }
 
     protected void tellTaskWillingnessSwapped(long itemId1, long itemId2)
     {
-        mItemProvider.swapWillingness(itemId1, itemId2);
+        mItemProvider.swapWillingnessOfTasks(itemId1, itemId2);
     }
 
 }

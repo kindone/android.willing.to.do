@@ -30,74 +30,141 @@ public abstract class RecyclerListAdapter<Item extends RecyclerListItem> extends
 
     @Override
     public void onBindViewHolder(final RecyclerListItemViewHolder holder, int position) {
-        Log.v("bindViewHolder", "count=" + mItems.size() + ", position=" + position);
-        holder.setId(mItems.get(position).getId());
-        holder.setTitle(mItems.get(position).getTitle());
+        Log.v("bindViewHolder", "count=" + getItemCount() + ", position=" + position);
+        initializeViewHolder(holder, position);
+    }
 
-        // Start a drag whenever the handle view it touched
+    private void initializeViewHolder(RecyclerListItemViewHolder holder, int position)
+    {
+        initializeHolder(holder, position);
+        setupTouchListener(holder);
+    }
+
+    private void initializeHolder(RecyclerListItemViewHolder holder, int position)
+    {
+        holder.setId(getItem(position).getId());
+        holder.setTitle(getItem(position).getTitle());
+    }
+
+    private void setupTouchListener(RecyclerListItemViewHolder holder)
+    {
+        setupDragStartEventOnHolderTouched(holder);
+    }
+
+    private void setupDragStartEventOnHolderTouched(final RecyclerListItemViewHolder holder)
+    {
         holder.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-                    mDragStartListener.onStartDrag(holder);
+                if (isMotionEventDown(event)) {
+                    dispatchStartDragEvent(holder);
                 }
                 return false;
             }
         });
     }
 
-    public void onItemCreate(int position, RecyclerListItem item) {
+    private boolean isMotionEventDown(MotionEvent event)
+    {
+        return MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN;
+    }
+
+    private void dispatchStartDragEvent(RecyclerListItemViewHolder holder)
+    {
+        mDragStartListener.onStartDrag(holder);
+    }
+
+    public void onCreateItem(int position, RecyclerListItem item) {
         RecyclerListItem item2 = tellItemCreated(item);
-        mItems.add(position, (Item)item2);
+        addItem(position, (Item)item2);
         notifyItemInserted(position);
     }
 
-    public void onItemUpdate(RecyclerListItem updatedItem) {
-        for(int pos = 0; pos < mItems.size();++pos)
+    public void onUpdateItem(RecyclerListItem updatedItem) {
+        FoundItemInList itemInList = findItemById(updatedItem.getId());
+        if(itemInList != null)
         {
-            Item it = mItems.get(pos);
-            if(it.getId() == updatedItem.getId())
-            {
-                mItems.set(pos, (Item) updatedItem);
-                notifyItemChanged(pos);
-                tellItemChanged((Item) updatedItem);
-                return;
-            }
+            updateItem(itemInList.position, (Item) updatedItem);
+            notifyItemChanged(itemInList.position);
+            tellItemChanged(updatedItem);
+            return;
         }
     }
 
-    public void onItemUpdate(long itemId, RecyclerListItem.Updater updater) {
-        for(int pos = 0; pos < mItems.size();++pos)
+    public void onUpdateItem(long itemId, RecyclerListItem.Updater updater) {
+        FoundItemInList itemInList = findItemById(itemId);
+        if(itemInList != null)
         {
-            Item it = mItems.get(pos);
-            if(it.getId() == itemId)
-            {
-                Item updatedItem = (Item)updater.update(it);
-                mItems.set(pos, updatedItem);
-                notifyItemChanged(pos);
-                tellItemChanged(updatedItem);
-                return;
+            Item updatedItem = (Item)updater.update(itemInList.item);
+            updateItem(itemInList.position, updatedItem);
+            notifyItemChanged(itemInList.position);
+            tellItemChanged(updatedItem);
+            return;
+        }
+    }
+
+    private FoundItemInList findItemById(long itemId)
+    {
+        for(int pos = 0; pos < getItemCount();++pos) {
+            Item item = getItem(pos);
+            if (item.getId() == itemId) {
+                return new FoundItemInList(item, pos);
             }
+        }
+
+        return null;
+    }
+
+    class FoundItemInList
+    {
+        public final Item item;
+        public final int position;
+
+        public FoundItemInList(Item item, int position)
+        {
+            this.item = item;
+            this.position = position;
         }
     }
 
     @Override
     public void onItemDismiss(int position) {
-        Item taskItem = mItems.get(position);
-        mItems.remove(position);
+        Item taskItem = getItem(position);
+        removeItem(position);
         notifyItemRemoved(position);
         tellItemRemoved(taskItem.getId());
     }
 
     public boolean onItemMove(int fromPosition, int toPosition) {
-        Item taskItem1 = mItems.get(fromPosition);
-        Item taskItem2 = mItems.get(toPosition);
+        Item taskItem1 = getItem(fromPosition);
+        Item taskItem2 = getItem(toPosition);
 
-        Collections.swap(mItems, fromPosition, toPosition);
+        swapItems(fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
         tellItemSwapped(taskItem1.getId(), taskItem2.getId());
 
         return true;
+    }
+
+
+
+    private void addItem(int position, Item item)
+    {
+        mItems.add(position, (Item)item);
+    }
+
+    private void removeItem(int position) {
+        mItems.remove(position);
+    }
+
+    private void updateItem(int position, Item updatedItem)
+    {
+        mItems.set(position, updatedItem);
+    }
+
+    private void swapItems(int pos1, int pos2)
+    {
+        Collections.swap(mItems, pos1, pos2);
     }
 
     public Item getItem(int position) {
@@ -108,6 +175,8 @@ public abstract class RecyclerListAdapter<Item extends RecyclerListItem> extends
     public int getItemCount() {
         return mItems.size();
     }
+
+
 
     abstract protected RecyclerListItem tellItemCreated(RecyclerListItem item);
 

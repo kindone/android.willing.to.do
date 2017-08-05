@@ -12,23 +12,40 @@ public class TimerPaused extends TimerState {
         mRemainingMs = remainingMs;
     }
 
-    public void start() {
+    @Override
+    public boolean start() {
         resume();
+        return CHANGED;
     }
 
-    public void pause() {
+    @Override
+    public boolean pause() {
         // DO NOTHING
+        return UNCHANGED;
     }
 
-    public void resume() {
+    @Override
+    public boolean resume() {
         changeState(new TimerRunning(mContext, mRemainingMs));
+        return CHANGED;
     }
-    public void stop() {
+
+    @Override
+    public boolean stop() {
         changeState(new TimerStopped(mContext));
+        return UNCHANGED;
     }
 
     @Override
     public long getRemainingTimeMs() {
         return mRemainingMs > 0 ? mRemainingMs : 0;
+    }
+
+    public boolean isRunning() {
+        return false;
+    }
+
+    public boolean isStopped() {
+        return false;
     }
 }

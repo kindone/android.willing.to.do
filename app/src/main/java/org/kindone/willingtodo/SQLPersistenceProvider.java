@@ -4,97 +4,97 @@ import android.content.Context;
 
 import org.kindone.willingtodo.data.Task;
 import org.kindone.willingtodo.data.TaskContext;
-import org.kindone.willingtodo.persistence.ConfigProvider;
-import org.kindone.willingtodo.persistence.SqliteHelper;
+import org.kindone.willingtodo.persistence.ConfigPersistenceProvider;
+import org.kindone.willingtodo.persistence.sqlite.SqliteHelper;
 import org.kindone.willingtodo.persistence.PersistenceProvider;
-import org.kindone.willingtodo.persistence.TaskContextProvider;
-import org.kindone.willingtodo.persistence.TaskProvider;
+import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider;
+import org.kindone.willingtodo.persistence.TaskPersistenceProvider;
 
 import java.util.List;
 
 /**
  * Created by kindone on 2016. 12. 20..
  */
-class SQLPersistenceProvider implements PersistenceProvider {
+public class SQLPersistenceProvider implements PersistenceProvider {
 
-    final TaskProvider mTaskProvider;
-    final TaskContextProvider mTaskContextProvider;
+    final TaskPersistenceProvider mTaskPersistenceProvider;
+    final TaskContextPersistenceProvider mTaskContextPersistenceProvider;
     final SqliteHelper mDbHelper;
-    final ConfigProvider mConfigProvider;
+    final ConfigPersistenceProvider mConfigPersistenceProvider;
 
     SQLPersistenceProvider(Context context) {
         mDbHelper = new SqliteHelper(context, "test", null/*default cursorfactory*/);
 
-        mTaskProvider = new TaskProvider() {
+        mTaskPersistenceProvider = new TaskPersistenceProvider() {
             @Override
             public int getVersion() {
                 return mDbHelper.getVersion();
             }
 
-            public List<Task> getTasksOrderedByPriority(long contextId) {
+            public List<Task> getTasksOfContextOrderedByPriority(long contextId) {
                 return mDbHelper.getPriorityOrderedTasks(contextId);
             }
 
-            public List<Task> getTasksOrderedByWillingness(long contextId) {
+            public List<Task> getTasksOfContextOrderedByWillingness(long contextId) {
                 return mDbHelper.getWillingnessOrderedTasks(contextId);
             }
 
-            public Task create(Task task) {
+            public Task createTask(Task task) {
                 mDbHelper.insertTask(task);
                 return task;
             }
 
             @Override
-            public void update(Task task) {
+            public void updateTask(Task task) {
                 mDbHelper.updateTask(task.id, task);
             }
 
-            public void swapPriority(long id1, long id2) {
-                mDbHelper.swapTaskPriority(id1, id2);
+            public void swapPriorityOfTasks(long id1, long id2) {
+                mDbHelper.swapPriorityOfTasks(id1, id2);
             }
 
-            public void swapWillingness(long id1, long id2) {
-                mDbHelper.swapTaskWillingness(id1, id2);
+            public void swapWillingnessOfTasks(long id1, long id2) {
+                mDbHelper.swapWillingnessOfTasks(id1, id2);
             }
 
-            public void delete(long id) {
+            public void deleteTask(long id) {
                 mDbHelper.deleteTask(id);
             }
         };
 
-        mTaskContextProvider = new TaskContextProvider() {
+        mTaskContextPersistenceProvider = new TaskContextPersistenceProvider() {
             @Override
             public List<TaskContext> getTaskContexts() {
                 return mDbHelper.getTaskContexts();
             }
 
             @Override
-            public int getMode(long contextId) {
+            public int getModeOfTaskContext(long contextId) {
                 return mDbHelper.getContextMode(contextId);
             }
 
             @Override
-            public void setMode(long contextId, int mode) {
+            public void setModeOfTaskContext(long contextId, int mode) {
                 mDbHelper.setContextMode(contextId, mode);
             }
 
             @Override
-            public TaskContext create(TaskContext context) {
+            public TaskContext createTaskContext(TaskContext context) {
                 return mDbHelper.insertTaskContext(context);
             }
 
             @Override
-            public void update(TaskContext context) {
-                mDbHelper.updateTaskContext(context.id, context);
+            public void updateTaskContext(TaskContext context) {
+                mDbHelper.updateTaskContext(context);
             }
 
             @Override
-            public void swap(long id1, long id2) {
-                mDbHelper.swapTaskContext(id1, id2);
+            public void swapPositionOfTaskContexts(long id1, long id2) {
+                mDbHelper.swapPositionOfTaskContexts(id1, id2);
             }
 
             @Override
-            public void delete(long id) {
+            public void deleteTaskContext(long id) {
                 mDbHelper.deleteTaskContext(id);
             }
 
@@ -104,7 +104,7 @@ class SQLPersistenceProvider implements PersistenceProvider {
             }
         };
 
-        mConfigProvider = new ConfigProvider() {
+        mConfigPersistenceProvider = new ConfigPersistenceProvider() {
             @Override
             public int getTabIndex() {
                 return mDbHelper.getCurrentTabIndex();
@@ -123,16 +123,16 @@ class SQLPersistenceProvider implements PersistenceProvider {
     }
 
     @Override
-    public TaskProvider getTaskProvider() {
-        return mTaskProvider;
+    public TaskPersistenceProvider getTaskPersistenceProvider() {
+        return mTaskPersistenceProvider;
     }
 
     @Override
-    public TaskContextProvider getContextProvider() { return mTaskContextProvider; }
+    public TaskContextPersistenceProvider getTaskContextPersistenceProvider() { return mTaskContextPersistenceProvider; }
 
     @Override
-    public ConfigProvider getConfigProvider() {
-        return mConfigProvider;
+    public ConfigPersistenceProvider getConfigPersistenceProvider() {
+        return mConfigPersistenceProvider;
     }
 
     @Override

@@ -10,49 +10,72 @@ import android.widget.EditText;
 
 public class ContextCreateActivity extends AppCompatActivity {
 
+    private static int viewResourceId = R.layout.activity_context_create;
+    private static int toolbarResourceId = R.id.toolbar;
+    private static int menuResourceId = R.menu.context_create;
+
+    private static int titleEditTextResourceId = R.id.titleEditText;
+    private static String CREATE_CONTEXT_TITLE = MainActivity.RESULT_CREATE_CONTEXT_TITLE;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_context_create);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        initializeView();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.context_create, menu);
+        initializeMenu(menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_done) {
-            setResult();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        boolean processed = processOptionItemSelected(item);
+        return processed || super.onOptionsItemSelected(item);
     }
 
-    private void setResult()
+    private void initializeView()
+    {
+        setContentView(viewResourceId);
+        setSupportActionBar((Toolbar) findViewById(toolbarResourceId));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    private void initializeMenu(Menu menu)
+    {
+        getMenuInflater().inflate(menuResourceId, menu);
+    }
+
+    private boolean processOptionItemSelected(MenuItem item)
+    {
+        int id = item.getItemId();
+
+        switch(id)
+        {
+            case R.id.action_done:
+                setActivityResult(RESULT_OK, CREATE_CONTEXT_TITLE, getContextTitle());
+                finish();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void setActivityResult(int status, String key, String value)
     {
         Intent intent = this.getIntent();
-        intent.putExtra(MainActivity.RESULT_CREATE_CONTEXT_TITLE, getContextTitle());
+        intent.putExtra(key, value);
 
         if (getParent() == null) {
-            setResult(RESULT_OK, intent);
+            setResult(status, intent);
         } else {
-            getParent().setResult(RESULT_OK, intent);
+            getParent().setResult(status, intent);
         }
-        finish();
     }
 
     private String getContextTitle() {
-        EditText titleText = (EditText) findViewById(R.id.titleEditText);
-        return titleText.getText().toString();
+        return ((EditText) findViewById(titleEditTextResourceId)).getText().toString();
     }
 
 }

@@ -12,7 +12,7 @@ import org.junit.BeforeClass;
 /**
  * Created by kindone on 2016. 12. 31..
  */
-public class TaskDbPrimitivesTest extends TestCase
+public class TaskSqliteHelperTest extends TestCase
 {
     private SQLiteDatabase mDatabase;
     private String tableName = "tasks";

@@ -8,7 +8,7 @@ import java.util.List;
  * Created by kindone on 2016. 12. 22..
  */
 
-public interface ConfigProvider {
+public interface ConfigPersistenceProvider {
 
     int getTabIndex();
 

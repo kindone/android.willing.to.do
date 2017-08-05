@@ -22,6 +22,10 @@ public class Task {
         this.willingness = willingness;
     }
 
+    public Task(String title, long contextId) {
+        this(0, title, contextId, "", "", 0, 0);
+    }
+
     public String toString() {
         return "id = " + id +
                 ", title = " + title +

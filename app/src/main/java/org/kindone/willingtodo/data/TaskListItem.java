@@ -13,7 +13,6 @@ public class TaskListItem implements RecyclerListItem{
     }
 
     public long getId() {
-
         return task.id;
     }
     public String getTitle() {
@@ -21,7 +20,6 @@ public class TaskListItem implements RecyclerListItem{
     }
 
     public Task getTask() {
-
         return task;
     }
 }

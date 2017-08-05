@@ -9,50 +9,54 @@ import java.util.concurrent.TimeUnit;
 public abstract class TimerState {
 
     final TimerContext mContext;
+    final protected static boolean CHANGED = true;
+    final protected static boolean UNCHANGED = false;
 
     public TimerState(TimerContext context) {
         mContext = context;
     }
 
-    public void start() {
-        throwUndefined();
-    }
+    // boolean states whether the state has changed
+    abstract public boolean start();
 
-    public void pause() {
-        throwUndefined();
-    }
+    abstract public boolean pause();
 
-    public void resume() {
-        throwUndefined();
-    }
+    abstract public boolean resume();
 
-    public void stop() {
-        throwUndefined();
-    }
+    abstract public boolean stop();
 
     public void changeState(TimerState newState) {
         mContext.changeState(newState);
     }
 
-    private void throwUndefined() {
-        throw new RuntimeException("undefined change of state");
-    }
-
 
     protected String getRemainingTimeStr(long remainingTime) {
         long time = remainingTime >= 0 ? remainingTime : 0;
-        return String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(time),
-                TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)));
+        if(time == 0)
+            return "Stopped";
+        else
+            return mm_ss_formattedRemainingTimeStr(time);
     }
 
-    public boolean isRunning() {
-        return false;
-    }
+    abstract public boolean isRunning();
 
+    abstract public boolean isStopped();
 
     public String getRemainingTimeStr() {
         return getRemainingTimeStr(getRemainingTimeMs());
     }
 
     abstract public long getRemainingTimeMs();
+
+    public long getStartedTimeMs() { return -1L; }
+
+    private void throwUndefined() {
+        throw new RuntimeException("undefined change of state");
+    }
+
+    private String mm_ss_formattedRemainingTimeStr(long time)
+    {
+        return String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(time),
+                TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)));
+    }
 }
