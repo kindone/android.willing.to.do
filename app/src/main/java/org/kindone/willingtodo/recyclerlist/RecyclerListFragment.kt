@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import com.melnykov.fab.FloatingActionButton
 
 import org.kindone.willingtodo.R
+import org.kindone.willingtodo.event.EventListenerMap
 import org.kindone.willingtodo.persistence.PersistenceProvider
 import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
 import org.kindone.willingtodo.persistence.TaskPersistenceProvider
@@ -24,7 +25,10 @@ import org.kindone.willingtodo.touchhelper.SimpleItemTouchHelperCallback
 /**
  * Created by kindone on 2016. 12. 22..
  */
-abstract class RecyclerListFragment : Fragment(), RecyclerListItemStartDragListener {
+abstract class RecyclerListFragment<Item> : Fragment(), RecyclerListItemStartDragListener, ListEventDispatcher<Item> {
+
+    override var eventListeners: EventListenerMap = mutableMapOf()
+
 
     protected var mItemTouchHelper: ItemTouchHelper? = null
 

@@ -16,9 +16,7 @@
 
 package org.kindone.willingtodo.recyclerlist.context
 
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 
 import org.kindone.willingtodo.R
@@ -30,8 +28,8 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListItem
 import org.kindone.willingtodo.recyclerlist.RecyclerListItemStartDragListener
 import org.kindone.willingtodo.recyclerlist.RecyclerListItemViewHolder
 
-class ContextRecyclerListAdapter(private val mItemProvider: TaskContextPersistenceProvider,
-                                 dragStartListener: RecyclerListItemStartDragListener) : RecyclerListAdapter<TaskContextListItem>(dragStartListener) {
+class TaskContextRecyclerListAdapter(private val mItemProvider: TaskContextPersistenceProvider,
+                                     dragStartListener: RecyclerListItemStartDragListener) : RecyclerListAdapter<TaskContextListItem>(dragStartListener) {
     private var mVersion: Int = 0
 
     init {
@@ -64,7 +62,7 @@ class ContextRecyclerListAdapter(private val mItemProvider: TaskContextPersisten
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.contextlist_item, parent, false)
-        val listItemViewHolder = ContextListItemViewHolder(view)
+        val listItemViewHolder = TaskContextListItemViewHolder(view)
         return listItemViewHolder
     }
 

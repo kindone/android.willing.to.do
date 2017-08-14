@@ -12,14 +12,14 @@ import org.kindone.willingtodo.persistence.ConfigPersistenceProvider
 import org.kindone.willingtodo.persistence.PersistenceProvider
 import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
 import org.kindone.willingtodo.persistence.TaskPersistenceProvider
-import org.kindone.willingtodo.recyclerlist.context.ContextRecyclerListFragment
+import org.kindone.willingtodo.recyclerlist.context.TaskContextRecyclerListFragment
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
 
 
 class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
 
 
-    private var mCurrentListFragment: RecyclerListFragment? = null
+    private var mCurrentListFragment: RecyclerListFragment<TaskContext>? = null
     private val mPersistenceProvider = SQLPersistenceProvider(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +29,7 @@ class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
 
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
-        mCurrentListFragment = ContextRecyclerListFragment.create()
+        mCurrentListFragment = TaskContextRecyclerListFragment.create()
         fragmentTransaction.add(R.id.content_manage_context, mCurrentListFragment)
         fragmentTransaction.commit()
 

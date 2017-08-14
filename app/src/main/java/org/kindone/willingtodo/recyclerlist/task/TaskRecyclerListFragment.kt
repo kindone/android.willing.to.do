@@ -36,7 +36,7 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
 import org.kindone.willingtodo.recyclerlist.RecyclerListItem
 
-class TaskRecyclerListFragment : RecyclerListFragment() {
+class TaskRecyclerListFragment : RecyclerListFragment<Task>() {
 
     protected var mIndicator: View? = null
 
@@ -144,7 +144,7 @@ class TaskRecyclerListFragment : RecyclerListFragment() {
         return TaskRecyclerViewContextMenuInfo(position)
     }
 
-    inner class TaskRecyclerViewContextMenuInfo(pos: Int) : RecyclerListFragment.RecyclerViewContextMenuInfo(pos) {
+    inner class TaskRecyclerViewContextMenuInfo(pos: Int) : RecyclerListFragment<Task>.RecyclerViewContextMenuInfo(pos) {
         var task: Task? = null
     }
 
@@ -154,7 +154,7 @@ class TaskRecyclerListFragment : RecyclerListFragment() {
 
         private val ARG_CONTEXT_ID = "context_id"
 
-        fun create(contextId: Long): RecyclerListFragment {
+        fun create(contextId: Long): RecyclerListFragment<Task> {
             val fragment = TaskRecyclerListFragment()
             val args = Bundle()
             args.putLong(ARG_CONTEXT_ID, contextId)

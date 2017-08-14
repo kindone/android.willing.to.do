@@ -20,12 +20,13 @@ import android.content.Intent
 
 import org.kindone.willingtodo.ContextCreateActivity
 import org.kindone.willingtodo.ManageContextActivity
+import org.kindone.willingtodo.data.TaskContext
 import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
 import org.kindone.willingtodo.recyclerlist.task.TaskRecyclerListAdapter
 
 
-class ContextRecyclerListFragment : RecyclerListFragment() {
+class TaskContextRecyclerListFragment : RecyclerListFragment<TaskContext>() {
 
     fun refresh(version: Int) {
         (mListAdapter as TaskRecyclerListAdapter).refresh(version)
@@ -33,7 +34,7 @@ class ContextRecyclerListFragment : RecyclerListFragment() {
 
     override fun createListAdapter(): RecyclerListAdapter<*> {
         // recycler list
-        val adapter = ContextRecyclerListAdapter(mContextProvider!!, this)
+        val adapter = TaskContextRecyclerListAdapter(mContextProvider!!, this)
         return adapter
     }
 
@@ -48,8 +49,8 @@ class ContextRecyclerListFragment : RecyclerListFragment() {
 
     companion object {
 
-        fun create(): RecyclerListFragment {
-            val fragment = ContextRecyclerListFragment()
+        fun create(): RecyclerListFragment<TaskContext> {
+            val fragment = TaskContextRecyclerListFragment()
             return fragment
         }
     }

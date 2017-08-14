@@ -12,7 +12,7 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListItemViewHolder
  * Created by kindone on 2016. 12. 25..
  */
 
-class ContextListItemViewHolder(itemView: View) : RecyclerListItemViewHolder(itemView) {
+class TaskContextListItemViewHolder(itemView: View) : RecyclerListItemViewHolder(itemView) {
 
     private val mTitleView: TextView
     private val mHandleView: ImageView
