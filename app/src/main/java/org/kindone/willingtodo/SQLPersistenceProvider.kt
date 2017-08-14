@@ -17,11 +17,10 @@ class SQLPersistenceProvider internal constructor(context: Context) : Persistenc
 
     override val taskPersistenceProvider: TaskPersistenceProvider
     override val taskContextPersistenceProvider: TaskContextPersistenceProvider
-    internal val mDbHelper: SqliteHelper
+    internal val mDbHelper: SqliteHelper = SqliteHelperSingleton.get(context)
     override val configPersistenceProvider: ConfigPersistenceProvider
 
     init {
-        mDbHelper = SqliteHelper(context, "test", null/*default cursorfactory*/)
 
         taskPersistenceProvider = object : TaskPersistenceProvider {
             override val version: Int

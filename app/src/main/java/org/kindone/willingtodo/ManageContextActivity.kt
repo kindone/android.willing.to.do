@@ -2,8 +2,6 @@ package org.kindone.willingtodo
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
@@ -55,7 +53,7 @@ class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
         if (requestCode == INTENT_CREATE_CONTEXT) {
             if (resultCode == RESULT_OK) {
                 val name = data.getStringExtra(RESULT_CREATE_CONTEXT_TITLE)
-                mCurrentListFragment!!.onCreateItem(TaskContextListItem(TaskContext(0, name, 0, 0)))
+                mCurrentListFragment!!.createItem(TaskContextListItem(TaskContext(0, name, 0, 0)))
             }
         }
     }

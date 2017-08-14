@@ -18,7 +18,11 @@ open class TaskFormActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val intent = intent
-        val taskTitle = intent.getStringExtra(ARG_TASK_TITLE)
+        val taskTitle =
+                if(intent.hasExtra(TaskFormActivity.ARG_TASK_TITLE))
+                    intent.getStringExtra(TaskFormActivity.ARG_TASK_TITLE)
+                else
+                    ""
 
         initializeView(taskTitle)
     }
@@ -108,8 +112,8 @@ open class TaskFormActivity : AppCompatActivity() {
     }
 
     protected fun hideInputMethod() {
-        val immhide = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        immhide.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
     }
 
     protected var taskTitle: String

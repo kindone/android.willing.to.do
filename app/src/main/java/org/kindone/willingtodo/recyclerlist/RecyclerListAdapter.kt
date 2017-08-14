@@ -15,14 +15,17 @@ import java.util.Collections
 /**
  * Created by kindone on 2016. 12. 22..
  */
-abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragStartListener: RecyclerListItemStartDragListener) : RecyclerView.Adapter<RecyclerListItemViewHolder>(), ItemTouchHelperAdapter {
+abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragStartListener: RecyclerListItemStartDragListener)
+    : RecyclerView.Adapter<RecyclerListItemViewHolder>(), ItemTouchHelperAdapter
+{
+
     protected val mItems: MutableList<Item> = ArrayList()
 
     protected var orderByWillingness: Boolean = false
 
+
+
     abstract override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListItemViewHolder
-
-
 
     override fun onBindViewHolder(holder: RecyclerListItemViewHolder, position: Int) {
         Log.v("bindViewHolder", "count=$itemCount, position=$position")
@@ -30,16 +33,9 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
     }
 
     private fun initializeViewHolder(holder: RecyclerListItemViewHolder, position: Int) {
-        initializeHolder(holder, position)
-        setupTouchListener(holder)
-    }
-
-    private fun initializeHolder(holder: RecyclerListItemViewHolder, position: Int) {
         holder.setListItemId(getItem(position).getId())
         holder.setTitle(getItem(position).getTitle())
-    }
 
-    private fun setupTouchListener(holder: RecyclerListItemViewHolder) {
         setupDragStartEventOnHolderTouched(holder)
     }
 

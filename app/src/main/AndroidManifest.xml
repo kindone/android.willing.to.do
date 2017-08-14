@@ -23,6 +23,14 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".TaskCreateActivity"
+            android:label="@string/title_activity_task_create"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.kindone.willingtodo.MainActivity" />
+        </activity>
+        <activity
             android:name=".TaskEditActivity"
             android:label="@string/title_activity_task_edit"
             android:parentActivityName=".MainActivity">

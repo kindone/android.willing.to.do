@@ -60,11 +60,11 @@ abstract class RecyclerListFragment : Fragment(), RecyclerListItemStartDragListe
     }
 
 
-    fun onCreateItem(item: RecyclerListItem) {
+    fun createItem(item: RecyclerListItem) {
         mListAdapter!!.onCreateItem(mListAdapter!!.itemCount, item)
     }
 
-    fun onUpdateItem(item: RecyclerListItem) {
+    fun updateItem(item: RecyclerListItem) {
         mListAdapter!!.onUpdateItem(item)
     }
 

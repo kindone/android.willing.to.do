@@ -16,6 +16,7 @@
 
 package org.kindone.willingtodo.recyclerlist.context
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,8 +49,8 @@ class ContextRecyclerListAdapter(private val mItemProvider: TaskContextPersisten
 
         contexts = loadContexts()
 
-        for (i in contexts.indices) {
-            mItems.add(TaskContextListItem(contexts[i]))
+        for (context in contexts) {
+            mItems.add(TaskContextListItem(context))
         }
     }
 

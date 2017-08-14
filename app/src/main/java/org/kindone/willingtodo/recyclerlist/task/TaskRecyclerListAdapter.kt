@@ -36,11 +36,22 @@ class TaskRecyclerListAdapter(private val contextId: Long, private val mItemProv
     private var mVersion: Int = 0
 
     init {
-        init()
+        initialize()
         mVersion = mItemProvider.version
     }
 
-    fun init() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListItemViewHolder {
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.tasklist_item, parent, false)
+        val listItemViewHolder = TaskListItemViewHolder(itemView)
+        listItemViewHolder.setOnLongClickListener(View.OnLongClickListener {
+            //TODO
+            false
+        })
+        return listItemViewHolder
+    }
+
+
+    private fun initialize() {
         reloadFromProvider()
     }
 
@@ -70,16 +81,6 @@ class TaskRecyclerListAdapter(private val contextId: Long, private val mItemProv
 
     fun reorderByWillingness() {
         mContextProvider.setModeOfTaskContext(contextId, 1)
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListItemViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.tasklist_item, parent, false)
-        val listItemViewHolder = TaskListItemViewHolder(view)
-        listItemViewHolder.setOnLongClickListener(View.OnLongClickListener {
-            //TODO
-            false
-        })
-        return listItemViewHolder
     }
 
 

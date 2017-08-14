@@ -85,6 +85,7 @@ class TaskContextSqliteHelper(internal val tableName: String) {
             db.setTransactionSuccessful()
         } else
             Log.e(TAG, "swapContext was not done properly. Affected rows=" + numRowsAffected)
+        db.endTransaction()
     }
 
     fun getModeOfTaskContext(db: SQLiteDatabase, id: Long): Int {

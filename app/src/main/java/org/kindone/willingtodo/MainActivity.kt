@@ -5,8 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.TabLayout
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
@@ -18,7 +16,6 @@ import android.widget.RelativeLayout
 
 import org.kindone.willingtodo.views.TabWithViewPager
 import org.kindone.willingtodo.data.Task
-import org.kindone.willingtodo.data.TaskContext
 import org.kindone.willingtodo.data.TaskListItem
 import org.kindone.willingtodo.persistence.ConfigPersistenceProvider
 import org.kindone.willingtodo.persistence.sqlite.SqliteHelper
@@ -37,10 +34,15 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
     private var mTabWithViewPager: TabWithViewPager? = null
 
-    private var pomodoroControl: PomodoroControlFragment? = null
+    private var pomodoroControlFragment: PomodoroControlFragment? = null
 
 
-    private val mPersistenceProvider = SQLPersistenceProvider(this)
+    private val mPersistenceProvider:SQLPersistenceProvider by lazy {
+        SQLPersistenceProvider(this)
+    }
+
+    private val mPomodoroServiceStarter = PomodoroServiceStarter(this)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.v(TAG, "onCreate")
@@ -52,43 +54,9 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
         initializeLayout()
         initializeToolbar()
-        initializeTabWithViewPager(getSavedTabPosition(savedInstanceState!!))
+        initializeTabWithViewPager()
         initializePomodoroControl()
     }
-
-
-    override fun onStart() {
-        Log.v(TAG, "onStart")
-        super.onStart()
-    }
-
-    override fun onRestart() {
-        Log.v(TAG, "onRestart")
-        super.onRestart()
-    }
-
-    override fun onStop() {
-        Log.v(TAG, "onStop")
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        Log.v(TAG, "onDestroy")
-        super.onDestroy()
-    }
-
-    override fun onPause() {
-        Log.v(TAG, "onPause")
-        saveState()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        Log.v(TAG, "onResume")
-        loadState()
-        super.onResume()
-    }
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         Log.v(TAG, "onCreateOptionsMenu")
@@ -117,10 +85,11 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         }
     }
 
+    // item context menu
     override fun onContextItemSelected(item: MenuItem): Boolean {
         Log.v(TAG, "onContextItemSelected")
         when (item.itemId) {
-            R.id.action_pomodoro -> startPomodoroTimer(item)
+            R.id.action_pomodoro -> startPomodoroTimerForItem(item)
             R.id.action_move_task ->
                 // TODO
                 Log.v(TAG, "move task context item selected")
@@ -128,27 +97,76 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         return true
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        super.onActivityResult(requestCode, resultCode, data)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultIntent: Intent?) {
+        super.onActivityResult(requestCode, resultCode, resultIntent)
 
         Log.v(TAG, "onActivityResult")
 
-        if (isActivityResultOk(resultCode))
-            processActivityResult(requestCode, data)
+        if(resultIntent != null && isActivityResultOk(resultCode))
+            processActivityResult(requestCode, resultIntent!!)
     }
 
 
+    override fun onStart() {
+        Log.v(TAG, "onStart")
+        super.onStart()
+    }
+
+    override fun onRestart() {
+        Log.v(TAG, "onRestart")
+        super.onRestart()
+    }
+
+    override fun onStop() {
+        Log.v(TAG, "onStop")
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        Log.v(TAG, "onDestroy")
+        super.onDestroy()
+    }
+
+    override fun onPause() {
+        Log.v(TAG, "onPause")
+
+        saveState()
+
+        super.onPause()
+    }
+
+    override fun onResume() {
+        Log.v(TAG, "onResume")
+
+        loadState()
+
+//        setTabPosition(loadTabIdx())
+
+        super.onResume()
+    }
+
+
+    /** --> interface for OnPomodoroControlListener **/
+
     override fun onResumePomodoroTimer() {
-        resumePomodoroTimerService()
+        mPomodoroServiceStarter.resumePomodoroTimerService()
     }
 
     override fun onPausePomodoroTimer(remainingTimeMs: Long) {
-        pausePomodoroTimerService(remainingTimeMs)
+        mPomodoroServiceStarter.pausePomodoroTimerService(remainingTimeMs)
     }
 
     override fun onStopPomodoroTimer() {
-        stopPomodoroTimerService()
+        mPomodoroServiceStarter.stopPomodoroTimerService()
     }
+
+    override fun onClosePomodoroControl() {
+        hidePomodoroMiniControl()
+        mPomodoroServiceStarter.stopPomodoroTimerService()
+    }
+
+    /** <-- OnPomodoroControlListener **/
+
 
     override fun onShowPomodoroControl() {
         showPomodoroMiniControl()
@@ -158,32 +176,13 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         hidePomodoroMiniControl()
     }
 
-    override fun onClosePomodoroControl() {
-        hidePomodoroMiniControl()
-        stopPomodoroTimerService()
-    }
-
-
-    fun showPomodoroMiniControl() {
+    private fun showPomodoroMiniControl() {
         findViewById(mainFooterResourceId)!!.visibility = View.VISIBLE
     }
 
-    fun hidePomodoroMiniControl() {
+    private fun hidePomodoroMiniControl() {
         expandMainBody()
         findViewById(R.id.main_bottom)!!.visibility = View.INVISIBLE
-    }
-
-
-    private fun initializeTabWithViewPager(savedTabPosition: Int) {
-        val viewPager = viewPager
-        val tabLayout = tabLayout
-
-        val viewPagerAdapter = ContextViewPagerAdapter(supportFragmentManager)
-        loadContextViewPagerAdapterContent(viewPagerAdapter)
-
-        mTabWithViewPager = TabWithViewPager.FromResources(viewPager, tabLayout, viewPagerAdapter)
-        mTabWithViewPager!!.setOnTabEventListener(TabWithViewPagerTabEventListener())
-        mTabWithViewPager!!.currentItemIdx = savedTabPosition
     }
 
 
@@ -196,9 +195,6 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
             currentTaskListFragment.setWillingnessOrdered(mPersistenceProvider.taskPersistenceProvider.version)
     }
 
-    private fun getModeOfTaskContext(taskContextId: Long): Int {
-        return mPersistenceProvider.taskContextPersistenceProvider.getModeOfTaskContext(taskContextId)
-    }
 
     private fun saveTabIdx(idx: Int) {
         mPersistenceProvider.configPersistenceProvider.saveTabIndex(idx)
@@ -209,39 +205,14 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
     }
 
 
-    private fun isActivityResultOk(resultCode: Int): Boolean {
-        return resultCode == RESULT_OK
-    }
-
-    private fun processActivityResult(requestCode: Int, data: Intent) {
+    private fun processActivityResult(requestCode: Int, intent: Intent) {
         when (requestCode) {
-            INTENT_CREATE_TASK -> createTask(data)
-            INTENT_EDIT_TASK -> updateTask(data)
+            INTENT_CREATE_TASK -> processCreateTaskResult(intent)
+            INTENT_EDIT_TASK -> processUpdateTaskResult(intent)
             else -> Log.e(TAG, "processActivityResult: undefined requestCode = " + requestCode)
         }
     }
 
-
-    private fun loadContextViewPagerAdapterContent(adapter: ContextViewPagerAdapter) {
-        adapter.clear()
-        val taskContexts = mPersistenceProvider.taskContextPersistenceProvider.taskContexts
-
-        for (taskContext in taskContexts) {
-            adapter.addFragment(taskContext.id, TaskRecyclerListFragment.create(taskContext.id), taskContext.name)
-        }
-    }
-
-    private fun getSavedTabPosition(savedInstanceState: Bundle): Int {
-        return loadTabIdx()
-    }
-
-    private fun loadFromSavedBundle() {
-        //        int savedTabPosition = 0;
-        //        if (savedInstanceState != null) {
-        //            savedTabPosition = savedInstanceState.getInt(STATE_TAB_POSITION);
-        //        }
-        //        return savedTabPosition;
-    }
 
     private fun handleInvalidActivityCall(): Boolean {
         if (!isTaskRoot) {
@@ -255,6 +226,8 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         return true
     }
 
+
+    /** --> Initialization **/
 
     private fun initializeLayout() {
         setContentView(mainLayoutResourceId)
@@ -274,73 +247,54 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
     private fun initializePomodoroControl() {
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
-        pomodoroControl = PomodoroControlFragment.create()
-        fragmentTransaction.add(mainFooterResourceId, pomodoroControl)
+        pomodoroControlFragment = PomodoroControlFragment.create()
+        fragmentTransaction.add(mainFooterResourceId, pomodoroControlFragment)
         fragmentTransaction.commit()
     }
 
-    private fun setMenu(menu: Menu) {
-        mMenu = menu
+    private fun initializeTabWithViewPager() {
+        val viewPager = viewPager
+        val tabLayout = tabLayout
+
+        val viewPagerAdapter = ContextViewPagerAdapter(supportFragmentManager)
+        loadContextViewPagerAdapterContent(viewPagerAdapter)
+
+        mTabWithViewPager = TabWithViewPager.FromResources(viewPager, tabLayout, viewPagerAdapter)
+        mTabWithViewPager!!.setOnTabEventListener(TabWithViewPagerTabEventListener())
+
+        setTabPosition(loadTabIdx())
     }
+
+    private fun loadContextViewPagerAdapterContent(adapter: ContextViewPagerAdapter) {
+        adapter.clear()
+        val taskContexts = mPersistenceProvider.taskContextPersistenceProvider.taskContexts
+
+        for (taskContext in taskContexts) {
+            adapter.addFragment(taskContext.id, TaskRecyclerListFragment.create(taskContext.id), taskContext.name)
+        }
+    }
+
+    /** <-- Initialization **/
+
+
 
 
     private fun sortListByPriority() {
         Log.i(TAG, "Mode Priority")
-        saveTaskContextMode(currentContextId, SqliteHelper.MODE_PRIORITY)
+        saveTaskContextMode(getCurrentContextId(), SqliteHelper.MODE_PRIORITY)
         setPriorityAndWillingnessButton(SqliteHelper.MODE_PRIORITY)
         currentTaskListFragment.setPriorityOrdered(mPersistenceProvider.getVersion())
     }
 
     private fun sortListByWillingness() {
         Log.i(TAG, "Mode Willingness")
-        saveTaskContextMode(currentContextId, SqliteHelper.MODE_WILLINGNESS)
+        saveTaskContextMode(getCurrentContextId(), SqliteHelper.MODE_WILLINGNESS)
         setPriorityAndWillingnessButton(SqliteHelper.MODE_WILLINGNESS)
         currentTaskListFragment.setWillingnessOrdered(mPersistenceProvider.getVersion())
     }
 
 
-    private fun startManageContextActivity() {
-        val intent = Intent(this, ManageContextActivity::class.java)
-        startActivityForResult(intent, INTENT_MANAGE_CONTEXT)
-    }
-
-    private fun createTask(data: Intent) {
-        val title = data.getStringExtra(RESULT_TASK_TITLE)
-        val contextId = currentContextId
-        currentTaskListFragment.onCreateItem(TaskListItem(Task(0, title, contextId, "", "", 0, 0)))
-    }
-
-    private fun getTaskFromResult(data: Intent): Task {
-        val title = data.getStringExtra(RESULT_TASK_TITLE)
-        val contextId = currentContextId
-        return Task(0, title, contextId, "", "", 0, 0)
-    }
-
-    private fun updateTask(data: Intent) {
-        val id = data.getLongExtra(RESULT_TASK_ID, -1)
-        val title = data.getStringExtra(RESULT_TASK_TITLE)
-
-        if (id == -1L || title == null)
-            throw RuntimeException("Intent did not correctly include required parameter RESULT_TASK_ID")
-
-        currentTaskListFragment.onUpdateItem(id, object : RecyclerListItem.Updater {
-            override fun update(item: RecyclerListItem): RecyclerListItem {
-                val task = (item as TaskListItem).task
-                return TaskListItem(Task(task.id, title, task.contextId,
-                        task.category, task.deadline, task.priority, task.willingness))
-            }
-        })
-    }
-
-    private fun startPomodoroTimer(item: MenuItem) {
-        val rMenuInfo = item.menuInfo as TaskRecyclerListFragment.TaskRecyclerViewContextMenuInfo
-        Log.v(TAG, "pomodoro context item selected itemId=" + rMenuInfo.task!!.id)
-
-        startPomodoroTimerService(rMenuInfo.task!!)
-        startPomodoroControl(rMenuInfo.task!!)
-    }
-
-    fun setPriorityAndWillingnessButton(mode: Int) {
+    private fun setPriorityAndWillingnessButton(mode: Int) {
         if (mode == SqliteHelper.MODE_PRIORITY) {
             toggleSortByPriorityMenu(false)
             toggleSortByWillingnessMenu(true)
@@ -367,69 +321,52 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
     }
 
 
-    private fun expandMainBody() {
-        // FIXME: is this needed? what about the counterpart? (showing footer)
-        val lp = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT)
-        lp.setMargins(0, 0, 0, 0)
-        findViewById(mainBodyResourceId)!!.layoutParams = lp
+
+    private fun processCreateTaskResult(resultIntent: Intent) {
+        val title = resultIntent.getStringExtra(RESULT_TASK_TITLE)
+        val contextId = getCurrentContextId()
+
+        currentTaskListFragment.createItem(TaskListItem(Task(title, contextId)))
     }
 
+    private fun processUpdateTaskResult(resultIntent: Intent) {
+        val id = resultIntent.getLongExtra(RESULT_TASK_ID, -1)
+        val title = resultIntent.getStringExtra(RESULT_TASK_TITLE)
+
+        if (id == -1L || title == null)
+            throw RuntimeException("Intent did not correctly include required parameter RESULT_TASK_ID")
+
+        val titleUpdater = object : RecyclerListItem.Updater {
+            override fun update(item: RecyclerListItem): RecyclerListItem {
+                val task = (item as TaskListItem).task
+                return TaskListItem(Task(task.id, title, task.contextId,
+                        task.category, task.deadline, task.priority, task.willingness))
+            }
+        }
+
+        currentTaskListFragment.updateItem(id, titleUpdater)
+    }
+
+
+
+    private fun startManageContextActivity() {
+        val intent = Intent(this, ManageContextActivity::class.java)
+        startActivityForResult(intent, INTENT_MANAGE_CONTEXT)
+    }
+
+    private fun startPomodoroTimerForItem(item: MenuItem) {
+        val rMenuInfo = item.menuInfo as TaskRecyclerListFragment.TaskRecyclerViewContextMenuInfo
+        Log.v(TAG, "pomodoro context item selected itemId=" + rMenuInfo.task!!.id)
+
+        mPomodoroServiceStarter.startPomodoroTimerService(rMenuInfo.task!!)
+        startPomodoroControl(rMenuInfo.task!!)
+    }
 
     private fun startPomodoroControl(task: Task) {
         showPomodoroMiniControl()
-        pomodoroControl!!.startTimer(task, defaultPomodoroDurationMs)
+        pomodoroControlFragment!!.startTimer(task, defaultPomodoroDurationMs)
     }
 
-    private fun startPomodoroTimerService(task: Task) {
-        val intent = createIntentForPomodoroTimerServiceStart(task)
-        startService(intent)
-    }
-
-    private fun resumePomodoroTimerService() {
-        val intent = createIntentForPomodoroTimerServiceResume()
-        startService(intent)
-    }
-
-    private fun pausePomodoroTimerService(remainingTimeMs: Long) {
-        val intent = createIntentForPomodoroTimerServicePause(remainingTimeMs)
-        startService(intent)
-    }
-
-    private fun stopPomodoroTimerService() {
-        val intent = createIntentForPomodoroTimerServiceStop()
-        startService(intent)
-    }
-
-
-    private fun createIntentForPomodoroTimerServiceStart(task: Task): Intent {
-        val intent = Intent(this, PomodoroTimerService::class.java)
-        intent.action = PomodoroTimerService.ACTION_START
-        intent.putExtra(PomodoroTimerService.ARG_TASK_ID, task.id)
-        intent.putExtra(PomodoroTimerService.ARG_TASK_TITLE, task.title)
-        intent.putExtra(PomodoroTimerService.ARG_TASK_DURATION_MS, defaultPomodoroDurationMs)
-        return intent
-    }
-
-    private fun createIntentForPomodoroTimerServiceResume(): Intent {
-        val intent = Intent(this, PomodoroTimerService::class.java)
-        intent.action = PomodoroTimerService.ACTION_RESUME
-        return intent
-    }
-
-    private fun createIntentForPomodoroTimerServicePause(remainingTimeMs: Long): Intent {
-        val intent = Intent(this, PomodoroTimerService::class.java)
-        intent.action = PomodoroTimerService.ACTION_PAUSE
-        intent.putExtra(PomodoroTimerService.ARG_TASK_REMAINING_TIME_MS, remainingTimeMs)
-        return intent
-    }
-
-    private fun createIntentForPomodoroTimerServiceStop(): Intent {
-        val intent = Intent(this, PomodoroTimerService::class.java)
-        intent.action = PomodoroTimerService.ACTION_STOP
-        return intent
-    }
 
     private fun saveState() {
         val prefs = getSharedPreferences(PREF_FILENAME, Context.MODE_PRIVATE).edit()
@@ -442,6 +379,8 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         setTabPosition(readTabPosition(prefs))
     }
 
+
+
     private fun writeTabPosition(prefs: SharedPreferences.Editor) {
         if (mTabWithViewPager != null)
             prefs.putInt(STATE_TAB_POSITION, mTabWithViewPager!!.currentItemIdx)
@@ -450,16 +389,6 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
     private fun readTabPosition(prefs: SharedPreferences): Int {
         return prefs.getInt(STATE_TAB_POSITION, 0)
     }
-
-
-    private val currentTaskListFragment: TaskRecyclerListFragment
-        get() = mTabWithViewPager!!.currentFragment as TaskRecyclerListFragment
-
-    val currentContextId: Long
-        get() {
-            val adapter = mTabWithViewPager!!.adapter as ContextViewPagerAdapter
-            return adapter.getContextId(mTabWithViewPager!!.currentItemIdx)
-        }
 
 
     private fun saveTaskContextMode(taskContextId: Long, mode: Int) {
@@ -471,26 +400,26 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
     }
 
 
-    private val tabLayout: TabLayout
-        get() = findViewById(R.id.tabs) as TabLayout
 
-    private val toolbar: Toolbar
-        get() = findViewById(R.id.toolbar) as Toolbar
+    private fun expandMainBody() {
+        // FIXME: is this needed? what about the counterpart? (showing footer)
+        val lp = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT)
+        lp.setMargins(0, 0, 0, 0)
+        findViewById(mainBodyResourceId)!!.layoutParams = lp
+    }
 
-    private val viewPager: ViewPager
-        get() = findViewById(R.id.viewpager) as ViewPager
 
     private fun setTabPosition(tabPosition: Int) {
         mTabWithViewPager!!.currentItemIdx = tabPosition
     }
 
-    internal inner class TabWithViewPagerTabEventListener : TabLayout.OnTabSelectedListener {
+    private inner class TabWithViewPagerTabEventListener : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
             val viewPagerAdapter = mTabWithViewPager!!.adapter as ContextViewPagerAdapter
             val taskContextId = viewPagerAdapter.getContextId(tab.position)
-            val mode = getModeOfTaskContext(taskContextId)
-            setPriorityAndWillingnessButton(mode)
-            setTaskContextModeForCurrentTaskList(mode)
+            updateModeChange(getTaskContextMode(taskContextId))
             saveTabIdx(tab.position)
         }
 
@@ -501,6 +430,29 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         }
     }
 
+    private fun updateModeChange(mode:Int) {
+        setPriorityAndWillingnessButton(mode)
+        setTaskContextModeForCurrentTaskList(mode)
+    }
+
+
+    /** View Accessor **/
+
+    private val tabLayout: TabLayout
+        get() = findViewById(R.id.tabs) as TabLayout
+
+    private val toolbar: Toolbar
+        get() = findViewById(R.id.toolbar) as Toolbar
+
+    private val viewPager: ViewPager
+        get() = findViewById(R.id.viewpager) as ViewPager
+
+    private val currentTaskListFragment: TaskRecyclerListFragment
+        get() = mTabWithViewPager!!.currentFragment as TaskRecyclerListFragment
+
+
+
+    /** Persistence Provider **/
 
     override val taskContextPersistenceProvider: TaskContextPersistenceProvider
         get() = mPersistenceProvider.taskContextPersistenceProvider
@@ -513,6 +465,23 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
     override fun getVersion(): Int {
         return mPersistenceProvider.getVersion()
+    }
+
+
+    /** Miscellaneous **/
+
+    private fun getCurrentContextId(): Long
+    {
+        val adapter = mTabWithViewPager!!.adapter as ContextViewPagerAdapter
+        return adapter.getContextId(mTabWithViewPager!!.currentItemIdx)
+    }
+
+    private fun setMenu(menu: Menu) {
+        mMenu = menu
+    }
+
+    private fun isActivityResultOk(resultCode: Int): Boolean {
+        return resultCode == RESULT_OK
     }
 
     companion object {
@@ -531,7 +500,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         private val sortByWillingnessMenuResourceId = R.id.action_sort_by_willingness
 
 
-        private val defaultPomodoroDurationMs = 25 * 60 * 1000L
+        val defaultPomodoroDurationMs = 25 * 60 * 1000L
 
 
         val INTENT_CREATE_TASK = 1

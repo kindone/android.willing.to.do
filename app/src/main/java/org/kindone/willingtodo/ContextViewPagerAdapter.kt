@@ -12,6 +12,7 @@ import java.util.ArrayList
 
 
 class ContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
+
     internal inner class AdapterElement(val contextId: Long, val fragment: Fragment, val title: String)
 
     private val adapterElements = ArrayList<AdapterElement>()
@@ -19,6 +20,8 @@ class ContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(m
     fun addFragment(contextId: Long, fragment: Fragment, title: String) {
         adapterElements.add(AdapterElement(contextId, fragment, title))
     }
+
+
 
     override fun getCount(): Int {
         return adapterElements.size
@@ -28,10 +31,11 @@ class ContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(m
         adapterElements.clear()
     }
 
+
+
     override fun getPageTitle(position: Int): CharSequence {
         return adapterElements[position].title
     }
-
 
     fun getContextId(position: Int): Long {
         return adapterElements[position].contextId
@@ -40,6 +44,5 @@ class ContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(m
     override fun getItem(position: Int): Fragment {
         return adapterElements[position].fragment
     }
-
 
 }

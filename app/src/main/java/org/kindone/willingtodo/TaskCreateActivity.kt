@@ -16,8 +16,11 @@ class TaskCreateActivity : TaskFormActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = intent
-        val taskTitle = intent.getStringExtra(TaskFormActivity.ARG_TASK_TITLE)
+        val taskTitle =
+                if(intent.hasExtra(TaskFormActivity.ARG_TASK_TITLE))
+                    intent.getStringExtra(TaskFormActivity.ARG_TASK_TITLE)
+                else
+                    ""
 
         initializeView(taskTitle)
     }

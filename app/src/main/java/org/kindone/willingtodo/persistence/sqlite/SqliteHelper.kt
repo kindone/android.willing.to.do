@@ -223,7 +223,6 @@ class SqliteHelper(context: Context, name: String, factory: SQLiteDatabase.Curso
         get() {
             val db = readableDatabase
             val tabIndex = configSqliteHelper.getCurrentTabIndex(db)
-            db.close()
             return tabIndex
         }
         set(index) {

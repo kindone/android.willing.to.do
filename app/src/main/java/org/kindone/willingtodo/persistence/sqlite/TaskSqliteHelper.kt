@@ -178,8 +178,6 @@ class TaskSqliteHelper(internal val tableName: String) {
             tasks.add(task)
             Log.v(TAG, "Tasks=" + task.toString())
         }
-
-        db.close()
     }
 
     private fun createTable(db: SQLiteDatabase) {

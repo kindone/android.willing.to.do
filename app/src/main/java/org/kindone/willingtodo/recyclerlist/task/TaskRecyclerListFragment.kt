@@ -127,7 +127,7 @@ class TaskRecyclerListFragment : RecyclerListFragment() {
         return adapter
     }
 
-    fun onUpdateItem(itemId: Long, updater: RecyclerListItem.Updater) {
+    fun updateItem(itemId: Long, updater: RecyclerListItem.Updater) {
         mListAdapter!!.onUpdateItem(itemId, updater)
     }
 

@@ -19,7 +19,7 @@ class TaskEditActivity : TaskFormActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = intent
+        val intent = this.intent
         val taskId = intent.getLongExtra(ARG_TASK_ID, -1)
         val taskTitle = intent.getStringExtra(TaskFormActivity.Companion.ARG_TASK_TITLE)
 
