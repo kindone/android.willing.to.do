@@ -16,29 +16,36 @@ import org.kindone.willingtodo.recyclerlist.context.TaskContextRecyclerListFragm
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
 
 
-class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
+class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
 
-
-    private var mCurrentListFragment: RecyclerListFragment<TaskContext>? = null
+    private var mRecyclerListFragment: RecyclerListFragment<TaskContext>? = null
     private val mPersistenceProvider = SQLPersistenceProvider(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_manage_context)
-        initToolbar()
 
-        val fragmentManager = supportFragmentManager
-        val fragmentTransaction = fragmentManager.beginTransaction()
-        mCurrentListFragment = TaskContextRecyclerListFragment.create()
-        fragmentTransaction.add(R.id.content_manage_context, mCurrentListFragment)
-        fragmentTransaction.commit()
-
+        initializeLayout()
+        initializeToolbar()
+        initializeListFragment()
     }
 
-    private fun initToolbar() {
+    private fun initializeLayout()
+    {
+        setContentView(R.layout.activity_manage_context)
+    }
+
+    private fun initializeToolbar() {
         val toolbar = findViewById(R.id.toolbar) as Toolbar?
         setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+    }
+
+    private fun initializeListFragment()
+    {
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        mRecyclerListFragment = TaskContextRecyclerListFragment.create()
+        fragmentTransaction.add(fragmentResourceId, mRecyclerListFragment)
+        fragmentTransaction.commit()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -47,15 +54,24 @@ class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        super.onActivityResult(requestCode, resultCode, data)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultIntent: Intent) {
+        super.onActivityResult(requestCode, resultCode, resultIntent)
 
-        if (requestCode == INTENT_CREATE_CONTEXT) {
-            if (resultCode == RESULT_OK) {
-                val name = data.getStringExtra(RESULT_CREATE_CONTEXT_TITLE)
-                mCurrentListFragment!!.createItem(TaskContextListItem(TaskContext(0, name, 0, 0)))
-            }
+        if (requestCode == INTENT_CREATE_TASK_CONTEXT && resultCode == RESULT_OK) {
+            processCreateTaskContextResult(resultIntent)
         }
+    }
+
+    private fun processCreateTaskContextResult(resultIntent:Intent)
+    {
+        val title = resultIntent.getStringExtra(RESULT_CREATE_TASK_CONTEXT_TITLE)
+        createItem(title)
+    }
+
+    private fun createItem(title:String)
+    {
+        val taskContextListItem = TaskContextListItem(TaskContext(0, title, 0, 0))
+        mRecyclerListFragment!!.createItem(taskContextListItem)
     }
 
     override val taskContextPersistenceProvider: TaskContextPersistenceProvider
@@ -72,12 +88,17 @@ class ManageContextActivity : AppCompatActivity(), PersistenceProvider {
        return mPersistenceProvider.getVersion()
     }
 
+
     companion object {
 
-        var TAG = "ManageContextAc"
-        var INTENT_CREATE_CONTEXT = 1
-        var RESULT_CREATE_TASK_CONTEXT_ID = "RESULT_CREATE_CONTEXT_ID"
-        var RESULT_CREATE_TASK_DEADLINE = "RESULT_CREATE_TASK_DEADLINE"
-        var RESULT_CREATE_CONTEXT_TITLE = "RESULT_CREATE_CONTEXT_TITLE"
+        val TAG = "ManageContextAc"
+
+        val INTENT_CREATE_TASK_CONTEXT = 1
+
+        val RESULT_CREATE_TASK_CONTEXT_ID = "RESULT_CREATE_CONTEXT_ID"
+
+        val RESULT_CREATE_TASK_CONTEXT_TITLE = "RESULT_CREATE_TASK_CONTEXT_TITLE"
+
+        val fragmentResourceId = R.id.content_manage_context
     }
 }

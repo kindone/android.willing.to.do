@@ -209,6 +209,9 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         when (requestCode) {
             INTENT_CREATE_TASK -> processCreateTaskResult(intent)
             INTENT_EDIT_TASK -> processUpdateTaskResult(intent)
+            /// TODO:
+            // task context list updated
+            // task context item updated
             else -> Log.e(TAG, "processActivityResult: undefined requestCode = " + requestCode)
         }
     }
@@ -256,7 +259,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         val viewPager = viewPager
         val tabLayout = tabLayout
 
-        val viewPagerAdapter = ContextViewPagerAdapter(supportFragmentManager)
+        val viewPagerAdapter = TaskContextViewPagerAdapter(supportFragmentManager)
         loadContextViewPagerAdapterContent(viewPagerAdapter)
 
         mTabWithViewPager = TabWithViewPager.FromResources(viewPager, tabLayout, viewPagerAdapter)
@@ -265,7 +268,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
         setTabPosition(loadTabIdx())
     }
 
-    private fun loadContextViewPagerAdapterContent(adapter: ContextViewPagerAdapter) {
+    private fun loadContextViewPagerAdapterContent(adapter: TaskContextViewPagerAdapter) {
         adapter.clear()
         val taskContexts = mPersistenceProvider.taskContextPersistenceProvider.taskContexts
 
@@ -350,7 +353,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
 
     private fun startManageContextActivity() {
-        val intent = Intent(this, ManageContextActivity::class.java)
+        val intent = Intent(this, ManageTaskContextActivity::class.java)
         startActivityForResult(intent, INTENT_MANAGE_CONTEXT)
     }
 
@@ -417,7 +420,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
     private inner class TabWithViewPagerTabEventListener : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
-            val viewPagerAdapter = mTabWithViewPager!!.adapter as ContextViewPagerAdapter
+            val viewPagerAdapter = mTabWithViewPager!!.adapter as TaskContextViewPagerAdapter
             val taskContextId = viewPagerAdapter.getContextId(tab.position)
             updateModeChange(getTaskContextMode(taskContextId))
             saveTabIdx(tab.position)
@@ -472,7 +475,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
     private fun getCurrentContextId(): Long
     {
-        val adapter = mTabWithViewPager!!.adapter as ContextViewPagerAdapter
+        val adapter = mTabWithViewPager!!.adapter as TaskContextViewPagerAdapter
         return adapter.getContextId(mTabWithViewPager!!.currentItemIdx)
     }
 
@@ -518,7 +521,7 @@ class MainActivity : AppCompatActivity(), PersistenceProvider, PomodoroControlFr
 
         var RESULT_CREATE_TASK_DEADLINE = "RESULT_CREATE_TASK_DEADLINE"
 
-        var RESULT_CREATE_CONTEXT_TITLE = "RESULT_CREATE_CONTEXT_TITLE"
+        var RESULT_CREATE_CONTEXT_TITLE = "RESULT_CREATE_TASK_CONTEXT_TITLE"
 
 
         var PREF_FILENAME = "mainActivity.pref"

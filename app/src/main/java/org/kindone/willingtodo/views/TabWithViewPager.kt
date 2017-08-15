@@ -8,7 +8,7 @@ import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.util.Log
 
-import org.kindone.willingtodo.ContextViewPagerAdapter
+import org.kindone.willingtodo.TaskContextViewPagerAdapter
 
 /**
  * Created by kindone on 2017. 1. 22..
@@ -46,7 +46,7 @@ class TabWithViewPager private constructor(private val mViewPager: ViewPager, pr
 
     val currentFragment: Fragment
         get() {
-            val adapter = mViewPager.adapter as ContextViewPagerAdapter
+            val adapter = mViewPager.adapter as TaskContextViewPagerAdapter
             return adapter.getItem(currentItemIdx)
         }
 

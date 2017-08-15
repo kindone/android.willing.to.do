@@ -39,7 +39,7 @@
                 android:value="org.kindone.willingtodo.MainActivity" />
         </activity>
         <activity
-            android:name=".ManageContextActivity"
+            android:name=".ManageTaskContextActivity"
             android:label="@string/title_activity_manage_context"
             android:parentActivityName=".MainActivity">
             <meta-data
@@ -47,12 +47,12 @@
                 android:value="org.kindone.willingtodo.MainActivity" />
         </activity>
         <activity
-            android:name=".ContextCreateActivity"
+            android:name=".TaskContextCreateActivity"
             android:label="@string/title_activity_context_create"
-            android:parentActivityName=".ManageContextActivity">
+            android:parentActivityName=".ManageTaskContextActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.kindone.willingtodo.ManageContextActivity" />
+                android:value="org.kindone.willingtodo.ManageTaskContextActivity" />
         </activity>
 
         <service

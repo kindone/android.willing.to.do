@@ -18,8 +18,8 @@ package org.kindone.willingtodo.recyclerlist.context
 
 import android.content.Intent
 
-import org.kindone.willingtodo.ContextCreateActivity
-import org.kindone.willingtodo.ManageContextActivity
+import org.kindone.willingtodo.TaskContextCreateActivity
+import org.kindone.willingtodo.ManageTaskContextActivity
 import org.kindone.willingtodo.data.TaskContext
 import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter
 import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
@@ -43,8 +43,8 @@ class TaskContextRecyclerListFragment : RecyclerListFragment<TaskContext>() {
     }
 
     private fun startCreateContextActivity() {
-        val intent = Intent(activity, ContextCreateActivity::class.java)
-        activity.startActivityForResult(intent, ManageContextActivity.INTENT_CREATE_CONTEXT)
+        val intent = Intent(activity, TaskContextCreateActivity::class.java)
+        activity.startActivityForResult(intent, ManageTaskContextActivity.INTENT_CREATE_TASK_CONTEXT)
     }
 
     companion object {

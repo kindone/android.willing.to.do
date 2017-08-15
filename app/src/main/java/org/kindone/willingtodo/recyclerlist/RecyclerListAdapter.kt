@@ -24,7 +24,6 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
     protected var orderByWillingness: Boolean = false
 
 
-
     abstract override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerListItemViewHolder
 
     override fun onBindViewHolder(holder: RecyclerListItemViewHolder, position: Int) {

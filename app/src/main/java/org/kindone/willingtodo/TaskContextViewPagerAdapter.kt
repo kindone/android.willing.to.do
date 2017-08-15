@@ -11,7 +11,7 @@ import java.util.ArrayList
  */
 
 
-class ContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
+class TaskContextViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {
 
     internal inner class AdapterElement(val contextId: Long, val fragment: Fragment, val title: String)
 

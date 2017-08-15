@@ -1,6 +1,5 @@
 package org.kindone.willingtodo
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
@@ -8,7 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 
-class ContextCreateActivity : AppCompatActivity() {
+class TaskContextCreateActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +39,7 @@ class ContextCreateActivity : AppCompatActivity() {
 
         when (id) {
             R.id.action_done -> {
-                setActivityResult(RESULT_OK, CREATE_CONTEXT_TITLE, contextTitle)
+                setActivityResult(RESULT_OK, CREATE_CONTEXT_TITLE, taskContextTitle)
                 finish()
                 return true
             }
@@ -59,7 +58,7 @@ class ContextCreateActivity : AppCompatActivity() {
         }
     }
 
-    private val contextTitle: String
+    private val taskContextTitle: String
         get() = (findViewById(titleEditTextResourceId) as EditText).text.toString()
 
     companion object {
