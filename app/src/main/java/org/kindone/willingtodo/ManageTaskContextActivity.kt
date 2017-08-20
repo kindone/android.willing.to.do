@@ -18,7 +18,7 @@ import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
 
 class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
 
-    private var mRecyclerListFragment: RecyclerListFragment<TaskContext>? = null
+    private var mRecyclerListFragment: TaskContextRecyclerListFragment? = null
     private val mPersistenceProvider = SQLPersistenceProvider(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +27,7 @@ class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
         initializeLayout()
         initializeToolbar()
         initializeListFragment()
+        initializeListFragmentEventListener()
     }
 
     private fun initializeLayout()
@@ -46,6 +47,14 @@ class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
         mRecyclerListFragment = TaskContextRecyclerListFragment.create()
         fragmentTransaction.add(fragmentResourceId, mRecyclerListFragment)
         fragmentTransaction.commit()
+    }
+
+    private fun initializeListFragmentEventListener()
+    {
+        mRecyclerListFragment!!.setItemInsertEventListener {  }
+        mRecyclerListFragment!!.setItemUpdateEventListener {  }
+        mRecyclerListFragment!!.setItemRemoveEventListener {  }
+        mRecyclerListFragment!!.setItemSwapEventListener {  }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

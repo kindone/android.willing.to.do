@@ -23,16 +23,17 @@ import android.view.ViewGroup
 import org.kindone.willingtodo.R
 import org.kindone.willingtodo.data.Task
 import org.kindone.willingtodo.data.TaskListItem
+import org.kindone.willingtodo.event.EventListenerMap
 import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
 import org.kindone.willingtodo.persistence.TaskPersistenceProvider
-import org.kindone.willingtodo.recyclerlist.RecyclerListAdapter
-import org.kindone.willingtodo.recyclerlist.RecyclerListItem
-import org.kindone.willingtodo.recyclerlist.RecyclerListItemStartDragListener
-import org.kindone.willingtodo.recyclerlist.RecyclerListItemViewHolder
+import org.kindone.willingtodo.recyclerlist.*
 
 class TaskRecyclerListAdapter(private val contextId: Long, private val mItemProvider: TaskPersistenceProvider,
                               private val mContextProvider: TaskContextPersistenceProvider,
-                              dragStartListener: RecyclerListItemStartDragListener) : RecyclerListAdapter<TaskListItem>(dragStartListener) {
+                              dragStartListener: RecyclerListItemStartDragListener) : RecyclerListAdapter<TaskListItem>(dragStartListener), TaskListEventDispatcher<RecyclerListItem> {
+
+    override var eventListeners: EventListenerMap = mutableMapOf()
+
     private var mVersion: Int = 0
 
     init {
@@ -128,5 +129,6 @@ class TaskRecyclerListAdapter(private val contextId: Long, private val mItemProv
     protected fun tellTaskWillingnessSwapped(itemId1: Long, itemId2: Long) {
         mItemProvider.swapWillingnessOfTasks(itemId1, itemId2)
     }
+
 
 }

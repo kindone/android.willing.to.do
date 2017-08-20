@@ -16,7 +16,7 @@ import java.util.Collections
  * Created by kindone on 2016. 12. 22..
  */
 abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragStartListener: RecyclerListItemStartDragListener)
-    : RecyclerView.Adapter<RecyclerListItemViewHolder>(), ItemTouchHelperAdapter
+    : RecyclerView.Adapter<RecyclerListItemViewHolder>(), ItemTouchHelperAdapter, ListEventDispatcher<RecyclerListItem>
 {
 
     protected val mItems: MutableList<Item> = ArrayList()
@@ -59,6 +59,8 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
         val item2 = tellItemCreated(item)
         addItem(position, item2 as Item)
         notifyItemInserted(position)
+
+        dispatchItemInsertEvent(ListItemInsertEvent(item))
     }
 
     fun onUpdateItem(updatedItem: RecyclerListItem) {
@@ -67,6 +69,7 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
             updateItem(itemInList.position, updatedItem as Item)
             notifyItemChanged(itemInList.position)
             tellItemChanged(updatedItem)
+            dispatchItemUpdateEvent(ListItemUpdateEvent(updatedItem))
             return
         }
     }
@@ -78,6 +81,7 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
             updateItem(itemInList.position, updatedItem)
             notifyItemChanged(itemInList.position)
             tellItemChanged(updatedItem)
+            dispatchItemUpdateEvent(ListItemUpdateEvent(updatedItem))
             return
         }
     }
@@ -99,6 +103,7 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
         removeItem(position)
         notifyItemRemoved(position)
         tellItemRemoved(taskItem.getId())
+        dispatchItemRemoveEvent(ListItemRemoveEvent(taskItem))
     }
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
@@ -108,6 +113,7 @@ abstract class RecyclerListAdapter<Item : RecyclerListItem>(protected val mDragS
         swapItems(fromPosition, toPosition)
         notifyItemMoved(fromPosition, toPosition)
         tellItemSwapped(taskItem1.getId(), taskItem2.getId())
+        dispatchItemSwapEvent(ListItemSwapEvent(taskItem1, taskItem2))
 
         return true
     }

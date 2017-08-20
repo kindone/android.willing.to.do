@@ -135,10 +135,10 @@ abstract class RecyclerListFragment<Item> : Fragment(), RecyclerListItemStartDra
     private fun createMyRecyclerView():MyRecyclerListView
     {
         val recyclerView = MyRecyclerListView(context)
-        recyclerView.setHasFixedSize(true)
+        recyclerView.setHasFixedSize(false)
         recyclerView.adapter = mListAdapter
         recyclerView.layoutManager = LinearLayoutManager(activity)
-        recyclerView.layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        recyclerView.layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         return recyclerView
     }
 
