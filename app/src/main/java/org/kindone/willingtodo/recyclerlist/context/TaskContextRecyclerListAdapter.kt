@@ -16,25 +16,20 @@
 
 package org.kindone.willingtodo.recyclerlist.context
 
-import android.support.v4.view.MotionEventCompat
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 
 import org.kindone.willingtodo.R
-import org.kindone.willingtodo.data.TaskContextListItem
 import org.kindone.willingtodo.data.TaskContext
+import org.kindone.willingtodo.data.TaskContextListItem
 import org.kindone.willingtodo.event.EventListenerMap
-import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
 import org.kindone.willingtodo.recyclerlist.*
 import org.kindone.willingtodo.touchhelper.ItemTouchHelperAdapter
 import java.util.*
 
-class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskContextPersistenceProvider,
-                                     private val mDragStartListener: RecyclerListItemStartDragListener)
+class TaskContextRecyclerListAdapter(private val mDragStartListener: RecyclerListItemStartDragListener)
     : RecyclerView.Adapter<TaskContextListItemViewHolder>(),
         ItemTouchHelperAdapter, ListEventDispatcher<RecyclerListItem> {
 
@@ -42,12 +37,8 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
 
     override var eventListeners: EventListenerMap = mutableMapOf()
 
-    private var mVersion: Int = 0
-
-
     init {
-        initialize()
-        mVersion = mTaskContextProvider.version
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskContextListItemViewHolder {
@@ -62,51 +53,6 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
         initializeViewHolder(holder, position)
     }
 
-
-    fun initialize() {
-        reloadFromProvider()
-    }
-
-    private fun reloadFromProvider() {
-        mItems.clear()
-        val contexts: List<TaskContext> = loadContextsFromProvider()
-
-        for (context in contexts) {
-            mItems.add(TaskContextListItem(context))
-        }
-    }
-
-    fun refresh(version: Int) {
-        if (version != mVersion) {
-            reloadFromProvider()
-            notifyDataSetChanged()
-            mVersion = mTaskContextProvider.version
-        }
-    }
-
-    private fun loadContextsFromProvider(): List<TaskContext> {
-        return mTaskContextProvider.taskContexts
-    }
-
-    fun tellItemCreated(item: RecyclerListItem): RecyclerListItem {
-        val taskContextListItem = item as TaskContextListItem
-        return TaskContextListItem(mTaskContextProvider.createTaskContext(taskContextListItem.taskContext))
-    }
-
-    fun tellItemChanged(item: RecyclerListItem) {
-        val taskContextListItem = item as TaskContextListItem
-        mTaskContextProvider.updateTaskContext(taskContextListItem.taskContext)
-    }
-
-    fun tellItemRemoved(itemId: Long) {
-        mTaskContextProvider.deleteTaskContext(itemId)
-    }
-
-    fun tellItemSwapped(itemId1: Long, itemId2: Long) {
-        mTaskContextProvider.swapPositionOfTaskContexts(itemId1, itemId2)
-    }
-
-
     private fun initializeViewHolder(holder: TaskContextListItemViewHolder, position: Int) {
         holder.setListItemId(getItem(position).getId())
         holder.setTitle(getItem(position).getTitle())
@@ -114,21 +60,23 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
     }
 
 
-    fun onCreateItem(position: Int, item: RecyclerListItem) {
-        val itemWithProperId = tellItemCreated(item)
-        addItem(position, itemWithProperId as TaskContextListItem)
-        notifyItemInserted(position)
 
-//        notifyItemRangeChanged(position, mItems.size);
+
+
+    fun onLoadItem(items:List<TaskContext>)
+    {
+        loadItemsToList(items)
+    }
+
+    fun onCreateItem(position: Int, item: RecyclerListItem) {
+        insertItemToList(position, item as TaskContextListItem)
         dispatchItemInsertEvent(ListItemInsertEvent(item))
     }
 
     fun onUpdateItem(updatedItem: RecyclerListItem) {
         val itemInList = findItemById(updatedItem.getId())
         if (itemInList != null) {
-            updateItem(itemInList.position, updatedItem as TaskContextListItem)
-            notifyItemChanged(itemInList.position)
-            tellItemChanged(updatedItem)
+            replaceItemInList(itemInList.position, updatedItem as TaskContextListItem)
             dispatchItemUpdateEvent(ListItemUpdateEvent(updatedItem))
             return
         }
@@ -138,13 +86,64 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
         val itemInList = findItemById(itemId)
         if (itemInList != null) {
             val updatedItem = updater.update(itemInList.item) as TaskContextListItem
-            updateItem(itemInList.position, updatedItem)
-            notifyItemChanged(itemInList.position)
-            tellItemChanged(updatedItem)
+            replaceItemInList(itemInList.position, updatedItem)
             dispatchItemUpdateEvent(ListItemUpdateEvent(updatedItem))
             return
         }
     }
+
+
+    override fun onItemDismiss(position: Int) {
+        val taskItem = getItem(position)
+        removeItemFromList(position)
+        dispatchItemRemoveEvent(ListItemRemoveEvent(taskItem))
+    }
+
+    override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
+        val taskItem1 = getItem(fromPosition)
+        val taskItem2 = getItem(toPosition)
+
+        swapItemsInList(fromPosition, toPosition)
+
+        dispatchItemSwapEvent(ListItemSwapEvent(taskItem1, taskItem2))
+
+        return true
+    }
+
+
+
+
+
+    private fun loadItemsToList(items:List<TaskContext>)
+    {
+        mItems.clear()
+        for(item in items) {
+            mItems.add(TaskContextListItem(item))
+        }
+        notifyDataSetChanged()
+    }
+
+    private fun insertItemToList(position: Int, item: TaskContextListItem) {
+        mItems.add(position, item)
+        notifyItemInserted(position)
+    }
+
+    private fun removeItemFromList(position: Int) {
+        mItems.removeAt(position)
+        notifyItemRemoved(position)
+    }
+
+    private fun replaceItemInList(position: Int, updatedItem: TaskContextListItem) {
+        mItems[position] = updatedItem
+        notifyItemChanged(position)
+    }
+
+    private fun swapItemsInList(pos1: Int, pos2: Int) {
+        Collections.swap(mItems, pos1, pos2)
+        notifyItemMoved(pos1, pos2)
+    }
+
+
 
     private fun findItemById(itemId: Long): FoundItemInList? {
         for (pos in 0..itemCount - 1) {
@@ -155,44 +154,6 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
         }
 
         return null
-    }
-
-
-    override fun onItemDismiss(position: Int) {
-        val taskItem = getItem(position)
-        removeItem(position)
-        notifyItemRemoved(position)
-        tellItemRemoved(taskItem.getId())
-        dispatchItemRemoveEvent(ListItemRemoveEvent(taskItem))
-    }
-
-    override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        val taskItem1 = getItem(fromPosition)
-        val taskItem2 = getItem(toPosition)
-
-        swapItems(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
-        tellItemSwapped(taskItem1.getId(), taskItem2.getId())
-        dispatchItemSwapEvent(ListItemSwapEvent(taskItem1, taskItem2))
-
-        return true
-    }
-
-
-    private fun addItem(position: Int, item: TaskContextListItem) {
-        mItems.add(position, item)
-    }
-
-    private fun removeItem(position: Int) {
-        mItems.removeAt(position)
-    }
-
-    private fun updateItem(position: Int, updatedItem: TaskContextListItem) {
-        mItems[position] = updatedItem
-    }
-
-    private fun swapItems(pos1: Int, pos2: Int) {
-        Collections.swap(mItems, pos1, pos2)
     }
 
     fun getItem(position: Int): TaskContextListItem {
@@ -206,6 +167,8 @@ class TaskContextRecyclerListAdapter(private val mTaskContextProvider: TaskConte
     override fun getItemCount(): Int {
         return mItems.size
     }
+
+
 
     internal inner class FoundItemInList(val item: TaskContextListItem, val position: Int)
 

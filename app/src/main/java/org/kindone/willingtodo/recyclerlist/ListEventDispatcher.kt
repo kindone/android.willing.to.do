@@ -10,7 +10,7 @@ import org.kindone.willingtodo.event.EventDispatcher
 
 data class ListItemInsertEvent<Item>(val item:Item) : Event
 data class ListItemUpdateEvent<Item>(val item:Item) : Event
-data class ListItemRemoveEvent<Item>(val item1:Item) : Event
+data class ListItemRemoveEvent<Item>(val item:Item) : Event
 data class ListItemSwapEvent<Item>(val item1:Item, val item2:Item) : Event
 
 interface ListItemInsertEventDispatcher<Item> : EventDispatcher

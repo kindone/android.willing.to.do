@@ -35,35 +35,28 @@ import org.kindone.willingtodo.ManageTaskContextActivity
 import org.kindone.willingtodo.R
 import org.kindone.willingtodo.data.TaskContext
 import org.kindone.willingtodo.event.EventListenerMap
-import org.kindone.willingtodo.persistence.PersistenceProvider
-import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
-import org.kindone.willingtodo.persistence.TaskPersistenceProvider
 import org.kindone.willingtodo.recyclerlist.*
 import org.kindone.willingtodo.recyclerlist.task.TaskRecyclerListAdapter
 import org.kindone.willingtodo.touchhelper.SimpleItemTouchHelperCallback
 
 
-class TaskContextRecyclerListFragment : Fragment(), RecyclerListItemStartDragListener, ListEventDispatcher<TaskContext> {
-
-
+class TaskContextRecyclerListFragment : Fragment(),
+        RecyclerListItemStartDragListener,
+        ListEventDispatcher<RecyclerListItem>,
+        ViewCreateEventDispatcher,
+        FloatingButtonClickEventDispatcher
+{
     override var eventListeners: EventListenerMap = mutableMapOf()
 
     private var mListItemTouchHelper: ItemTouchHelper? = null
 
     private var mNewFloatingButton: FloatingActionButton? = null
 
-    private var mTaskPersistenceProvider: TaskPersistenceProvider? = null
-
-    private var mContextProvider: TaskContextPersistenceProvider? = null
-
     private var mListAdapter: TaskContextRecyclerListAdapter? = null
 
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-
-        // TODO: remove persistence and replace with event
-        initializePersistenceProvider(context!!)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -72,6 +65,8 @@ class TaskContextRecyclerListFragment : Fragment(), RecyclerListItemStartDragLis
         initializeListAdapter()
         val layout = initializeLayout(view!!)
         initializeRecyclerView(layout)
+
+        dispatchViewCreateEvent(ViewCreateEvent())
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -80,26 +75,18 @@ class TaskContextRecyclerListFragment : Fragment(), RecyclerListItemStartDragLis
     }
 
 
-    // TODO:
-    fun refreshList(version: Int) {
-        (mListAdapter as TaskRecyclerListAdapter).refresh(version)
-    }
-
     fun createListAdapter(): TaskContextRecyclerListAdapter {
         // recycler list
-        val adapter = TaskContextRecyclerListAdapter(mContextProvider!!, this)
+        val adapter = TaskContextRecyclerListAdapter(this)
         return adapter
     }
 
-    fun onFloatingButtonClick() {
-        startCreateContextActivity()
+    fun initializeListAdapterEventListener(adapter:TaskContextRecyclerListAdapter) {
+        adapter.setItemInsertEventListener { e -> dispatchItemInsertEvent(e) }
+        adapter.setItemUpdateEventListener { e -> dispatchItemUpdateEvent(e) }
+        adapter.setItemRemoveEventListener { e -> dispatchItemRemoveEvent(e) }
+        adapter.setItemSwapEventListener { e -> dispatchItemSwapEvent(e) }
     }
-
-    private fun startCreateContextActivity() {
-        val intent = Intent(activity, TaskContextCreateActivity::class.java)
-        activity.startActivityForResult(intent, ManageTaskContextActivity.INTENT_CREATE_TASK_CONTEXT)
-    }
-
 
     fun createItem(item: RecyclerListItem) {
         mListAdapter!!.onCreateItem(mListAdapter!!.itemCount, item)
@@ -109,27 +96,18 @@ class TaskContextRecyclerListFragment : Fragment(), RecyclerListItemStartDragLis
         mListAdapter!!.onUpdateItem(item)
     }
 
+    fun loadItems(items: List<TaskContext>) {
+        mListAdapter!!.onLoadItem(items)
+    }
+
     override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
         mListItemTouchHelper!!.startDrag(viewHolder)
     }
 
-
-    private fun initializePersistenceProvider(context: Context)
-    {
-        try {
-            val provider = context as PersistenceProvider?
-            mTaskPersistenceProvider = provider!!.taskPersistenceProvider
-            mContextProvider = provider.taskContextPersistenceProvider
-
-        } catch (e: ClassCastException) {
-            throw ClassCastException(context!!.toString() + " must implement TaskPersistenceProvider")
-        }
-    }
-
-
     private fun initializeListAdapter()
     {
         mListAdapter = createListAdapter()
+        initializeListAdapterEventListener(mListAdapter!!)
     }
 
     private fun initializeLayout(view: View): LinearLayout
@@ -163,10 +141,8 @@ class TaskContextRecyclerListFragment : Fragment(), RecyclerListItemStartDragLis
     private fun initializeNewFloatingButton(container: ViewGroup)
     {
         mNewFloatingButton = container.rootView.findViewById(floatingActionButtonResourceId) as FloatingActionButton
-        mNewFloatingButton!!.setOnClickListener { onFloatingButtonClick() }
+        mNewFloatingButton!!.setOnClickListener { dispatchFloatingButtonClickEvent() }
     }
-
-
 
 
     protected open fun createContextMenuInfo(position: Int): ContextMenu.ContextMenuInfo {

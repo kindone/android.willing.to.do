@@ -13,7 +13,7 @@ import org.kindone.willingtodo.persistence.PersistenceProvider
 import org.kindone.willingtodo.persistence.TaskContextPersistenceProvider
 import org.kindone.willingtodo.persistence.TaskPersistenceProvider
 import org.kindone.willingtodo.recyclerlist.context.TaskContextRecyclerListFragment
-import org.kindone.willingtodo.recyclerlist.RecyclerListFragment
+import org.kindone.willingtodo.recyclerlist.RecyclerListItem
 
 
 class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
@@ -29,6 +29,15 @@ class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
         initializeListFragment()
         initializeListFragmentEventListener()
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultIntent: Intent) {
+        super.onActivityResult(requestCode, resultCode, resultIntent)
+
+        if (requestCode == INTENT_CREATE_TASK_CONTEXT && resultCode == RESULT_OK) {
+            processCreateTaskContextResult(resultIntent)
+        }
+    }
+
 
     private fun initializeLayout()
     {
@@ -51,24 +60,44 @@ class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
 
     private fun initializeListFragmentEventListener()
     {
-        mRecyclerListFragment!!.setItemInsertEventListener {  }
-        mRecyclerListFragment!!.setItemUpdateEventListener {  }
-        mRecyclerListFragment!!.setItemRemoveEventListener {  }
-        mRecyclerListFragment!!.setItemSwapEventListener {  }
+        mRecyclerListFragment!!.setItemRemoveEventListener { e -> removeItemInPersistence(e.item.getId()) }
+        mRecyclerListFragment!!.setItemSwapEventListener { e -> swapItemsInPersistence(e.item1.getId(), e.item2.getId()) }
+        mRecyclerListFragment!!.setViewCreateEventListener { loadListFragmentContent() }
+        mRecyclerListFragment!!.setFloatingButtonClickEventListener { startCreateContextActivity() }
+    }
+
+    private fun loadListFragmentContent()
+    {
+        mRecyclerListFragment!!.loadItems(taskContextPersistenceProvider.taskContexts)
+    }
+
+    private fun startCreateContextActivity() {
+        val intent = Intent(this, TaskContextCreateActivity::class.java)
+        startActivityForResult(intent, INTENT_CREATE_TASK_CONTEXT)
+    }
+
+    fun createItemInPersistence(item: RecyclerListItem): TaskContextListItem {
+        val taskContextListItem = item as TaskContextListItem
+        return TaskContextListItem(taskContextPersistenceProvider!!.createTaskContext(taskContextListItem.taskContext))
+    }
+
+    fun updateItemInPersistence(item: RecyclerListItem) {
+        val taskContextListItem = item as TaskContextListItem
+        taskContextPersistenceProvider!!.updateTaskContext(taskContextListItem.taskContext)
+    }
+
+    fun removeItemInPersistence(itemId: Long) {
+        taskContextPersistenceProvider!!.deleteTaskContext(itemId)
+    }
+
+    fun swapItemsInPersistence(itemId1: Long, itemId2: Long) {
+        taskContextPersistenceProvider!!.swapPositionOfTaskContexts(itemId1, itemId2)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         // TODO
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, resultIntent: Intent) {
-        super.onActivityResult(requestCode, resultCode, resultIntent)
-
-        if (requestCode == INTENT_CREATE_TASK_CONTEXT && resultCode == RESULT_OK) {
-            processCreateTaskContextResult(resultIntent)
-        }
     }
 
     private fun processCreateTaskContextResult(resultIntent:Intent)
@@ -80,7 +109,8 @@ class ManageTaskContextActivity : AppCompatActivity(), PersistenceProvider {
     private fun createItem(title:String)
     {
         val taskContextListItem = TaskContextListItem(TaskContext(0, title, 0, 0))
-        mRecyclerListFragment!!.createItem(taskContextListItem)
+        val taskContextListItemWithProperId = createItemInPersistence(taskContextListItem)
+        mRecyclerListFragment!!.createItem(taskContextListItemWithProperId)
     }
 
     override val taskContextPersistenceProvider: TaskContextPersistenceProvider
